@@ -51,7 +51,7 @@ const Serials = () => {
   const [isLedgerModalOpen, setIsLedgerModalOpen] = useState(false);
   const [isVerifyOpen, setIsVerifyOpen] = useState(false);
 
-  const { isAdmin } = useAuth();
+  const { isAdmin, canSell, canManageStock } = useAuth();
 
   const statusOptions = ['All', 'Available', 'On Credit', 'Sold', 'Returned', 'Damaged'];
 

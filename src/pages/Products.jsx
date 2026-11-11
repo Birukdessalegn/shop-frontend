@@ -33,7 +33,7 @@ const Products = () => {
   const [isAddSerialsOpen, setIsAddSerialsOpen] = useState(false);
   const [targetProductForSerials, setTargetProductForSerials] = useState('');
 
-  const { isAdmin } = useAuth();
+  const { isAdmin, canManageStock } = useAuth();
   const navigate = useNavigate();
 
   const categories = [
@@ -117,16 +117,18 @@ const Products = () => {
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => {
-              setEditingProduct(null);
-              setIsProductModalOpen(true);
-            }}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs transition"
-          >
-            <Plus size={15} />
-            <span>Register New Item</span>
-          </button>
+          {canManageStock && (
+            <button
+              onClick={() => {
+                setEditingProduct(null);
+                setIsProductModalOpen(true);
+              }}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs transition"
+            >
+              <Plus size={15} />
+              <span>Register New Item</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -304,7 +306,7 @@ const Products = () => {
                       {/* Actions */}
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
-                          {p.hasSerial && (
+                          {canManageStock && p.hasSerial && (
                             <button
                               onClick={() => {
                                 setTargetProductForSerials(p._id);
@@ -317,16 +319,18 @@ const Products = () => {
                             </button>
                           )}
 
-                          <button
-                            onClick={() => {
-                              setEditingProduct(p);
-                              setIsProductModalOpen(true);
-                            }}
-                            className="p-1.5 rounded-lg text-slate-600 hover:bg-slate-100 border border-slate-200 transition"
-                            title="Edit product info"
-                          >
-                            <Edit2 size={15} />
-                          </button>
+                          {canManageStock && (
+                            <button
+                              onClick={() => {
+                                setEditingProduct(p);
+                                setIsProductModalOpen(true);
+                              }}
+                              className="p-1.5 rounded-lg text-slate-600 hover:bg-slate-100 border border-slate-200 transition"
+                              title="Edit product info"
+                            >
+                              <Edit2 size={15} />
+                            </button>
+                          )}
 
                           {isAdmin && (
                             <button

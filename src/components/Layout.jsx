@@ -6,6 +6,7 @@ import {
   Package,
   Barcode,
   Users,
+  UserCog,
   LogOut,
   ShieldCheck,
   UserCheck,
@@ -31,7 +32,8 @@ const Layout = () => {
     { to: '/', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/products', label: 'Items & Catalog', icon: Package },
     { to: '/serials', label: 'Serial Numbers', icon: Barcode },
-    { to: '/customers', label: 'Customers & Credit', icon: Users }
+    { to: '/customers', label: 'Customers & Credit', icon: Users },
+    ...(isAdmin ? [{ to: '/users', label: 'Staff & Users', icon: UserCog }] : [])
   ];
 
   return (

@@ -41,6 +41,9 @@ export const authAPI = {
   register: (userData) => api.post('/auth/register', userData),
   getMe: () => api.get('/auth/me'),
   getUsers: () => api.get('/auth/users'),
+  createUser: (userData) => api.post('/auth/users', userData),
+  updateUser: (id, userData) => api.put(`/auth/users/${id}`, userData),
+  deleteUser: (id) => api.delete(`/auth/users/${id}`),
   seedAdmin: () => api.post('/auth/seed-admin')
 };
 
