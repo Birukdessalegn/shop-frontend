@@ -119,24 +119,13 @@ const Products = () => {
         <div className="flex items-center gap-2">
           <button
             onClick={() => {
-              setTargetProductForSerials('');
-              setIsAddSerialsOpen(true);
-            }}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition"
-          >
-            <Barcode size={15} />
-            <span>Register Serials</span>
-          </button>
-
-          <button
-            onClick={() => {
               setEditingProduct(null);
               setIsProductModalOpen(true);
             }}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs transition"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs transition"
           >
             <Plus size={15} />
-            <span>Add New Product</span>
+            <span>Register New Item</span>
           </button>
         </div>
       </div>

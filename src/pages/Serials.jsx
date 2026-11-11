@@ -23,6 +23,8 @@ import AddSerialsModal from '../components/AddSerialsModal';
 import SellSerialModal from '../components/SellSerialModal';
 import RecordPaymentModal from '../components/RecordPaymentModal';
 import CustomerLedgerModal from '../components/CustomerLedgerModal';
+import VerifyItemModal from '../components/VerifyItemModal';
+import { ShieldCheck } from 'lucide-react';
 
 const Serials = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -47,6 +49,7 @@ const Serials = () => {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [selectedCustomerIdForLedger, setSelectedCustomerIdForLedger] = useState(null);
   const [isLedgerModalOpen, setIsLedgerModalOpen] = useState(false);
+  const [isVerifyOpen, setIsVerifyOpen] = useState(false);
 
   const { isAdmin } = useAuth();
 
@@ -157,11 +160,11 @@ const Serials = () => {
 
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setIsAddSerialsOpen(true)}
+            onClick={() => setIsVerifyOpen(true)}
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition"
           >
-            <Barcode size={16} />
-            <span>Register Serials</span>
+            <ShieldCheck size={16} />
+            <span>Verify Item Ownership</span>
           </button>
         </div>
       </div>
@@ -486,6 +489,11 @@ const Serials = () => {
           setSelectedSerialForPayment(serial);
           setIsPaymentModalOpen(true);
         }}
+      />
+
+      <VerifyItemModal
+        isOpen={isVerifyOpen}
+        onClose={() => setIsVerifyOpen(false)}
       />
     </div>
   );

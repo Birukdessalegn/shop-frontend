@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Rounded Base Background -->
+  <rect width="64" height="64" rx="16" fill="url(#bgGrad)" />
+  
+  <!-- Subtle Inner Border Highlight -->
+  <rect x="1" y="1" width="62" height="62" rx="15" stroke="rgba(255,255,255,0.2)" stroke-width="2" />
+
+  <!-- Store Roof Awning / Electronics Canopy -->
+  <path d="M16 23 L32 15 L48 23 L48 27 L16 27 Z" fill="#ffffff" />
+  
+  <!-- Store Pillars & Display Window -->
+  <rect x="19" y="29" width="6" height="18" rx="2" fill="#e0e7ff" />
+  <rect x="39" y="29" width="6" height="18" rx="2" fill="#e0e7ff" />
+  
+  <!-- Center Electronics Screen / Microchip Symbol -->
+  <rect x="27" y="31" width="10" height="14" rx="2" fill="#10b981" />
+  <path d="M29 35 L35 35 M29 39 L33 39" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" />
+  
+  <!-- Base Foundation Line -->
+  <path d="M14 49 L50 49" stroke="#ffffff" stroke-width="3" stroke-linecap="round" />
+
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4f46e5" />
+      <stop offset="1" stop-color="#312e81" />
+    </linearGradient>
+  </defs>
+</svg>
