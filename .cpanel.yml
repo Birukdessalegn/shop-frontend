@@ -1,6 +1,6 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/ambbatxv/public_html/
+    - export DEPLOYPATH=/home/ambbatxv/shopy.ambbatech.com/
     - /bin/cp -R dist/* $DEPLOYPATH
 
