@@ -2,5 +2,6 @@
 deployment:
   tasks:
     - export DEPLOYPATH=/home/ambbatxv/shopy.ambbatech.com/
-    - /bin/cp -R dist/* $DEPLOYPATH
-
+    - /bin/cp -a dist/. $DEPLOYPATH
+    - /bin/cp dist/.htaccess $DEPLOYPATH
+    
