@@ -13,7 +13,13 @@ import {
   RefreshCw,
   Clock,
   CheckCircle2,
-  HandCoins
+  HandCoins,
+  TrendingUp,
+  PackageCheck,
+  Wallet,
+  BarChart3,
+  PieChart,
+  ShieldCheck
 } from 'lucide-react';
 import { StatusBadge, CreditBadge } from '../components/StatusBadge';
 import RecordPaymentModal from '../components/RecordPaymentModal';
@@ -96,15 +102,41 @@ const Dashboard = () => {
   }
 
   const m = data?.metrics || {};
+  const dailyTrend = data?.dailyTrend || [];
+  const categoryBreakdown = data?.categoryBreakdown || [];
+
+  // Financial aggregates
+  const totalGrossSales = Number(m.totalGrossSales || 0);
+  const totalCostOfSold = Number(m.totalCostOfSold || 0);
+  const netProfit = Number(m.netProfit || 0);
+  const profitMargin = Number(m.profitMargin || 0);
+  const totalCashInHand = Number(m.totalCollected || 0) + Number(m.totalCashSales || 0);
+  const totalCreditDebt = Number(m.totalCreditOutstanding || 0);
+  const totalReceivablesPool = totalCashInHand + totalCreditDebt;
+  const cashCollectionPct =
+    totalReceivablesPool > 0
+      ? Math.min(100, Math.round((totalCashInHand / totalReceivablesPool) * 100))
+      : 0;
+
+  // Chart max scale helper
+  const maxDaySales = Math.max(...dailyTrend.map((d) => Math.max(d.sales || 0, d.collected || 0)), 100);
+
+  // Total inventory pie counts
+  const totalInventoryTracked =
+    (m.availableSerials || 0) +
+    (m.itemsOnCredit || 0) +
+    (m.itemsSold || 0) +
+    (m.itemsDamaged || 0) +
+    (m.itemsReturned || 0);
 
   return (
     <div className="space-y-6">
       {/* Top Header & Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Shop Dashboard</h1>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Shop Financial Dashboard</h1>
           <p className="text-xs text-slate-500 mt-0.5">
-            Real-time inventory overview, serial tracking, and credit receivables
+            Real-time sales revenue, net profit margin, debt receivables, and inventory telemetry
           </p>
         </div>
 
@@ -134,149 +166,345 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* 4 Core Required KPI Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* 1. Total Products */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              Total Products
-            </span>
-            <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-              <Package size={18} />
+      {/* 1. PRIMARY FINANCIAL TELEMETRY CARDS (Gross Sales, Cash in Hand, Cost, Net Profit) */}
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+            Financial & Sales Performance
+          </h2>
+          <span className="text-[11px] text-slate-400">
+            Real-time Profit & Cost Engine
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Card 1: Total Gross Sales */}
+          <div className="bg-gradient-to-br from-indigo-900 to-slate-900 text-white p-5 rounded-2xl shadow-md border border-indigo-950 relative overflow-hidden">
+            <div className="absolute right-0 top-0 w-28 h-28 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none"></div>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold text-indigo-300 uppercase tracking-wider">
+                Total Sales Revenue
+              </span>
+              <div className="w-9 h-9 rounded-xl bg-indigo-800/80 text-indigo-200 flex items-center justify-center">
+                <DollarSign size={18} />
+              </div>
+            </div>
+            <div className="text-3xl font-extrabold tracking-tight">
+              ${totalGrossSales.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
+            <div className="mt-2 text-[11px] text-indigo-200 flex items-center justify-between">
+              <span>Cash: ${Number(m.totalCashSales || 0).toFixed(2)}</span>
+              <span>Credit: ${Number(m.totalCreditIssued || 0).toFixed(2)}</span>
             </div>
           </div>
-          <div className="flex items-baseline justify-between">
-            <span className="text-3xl font-extrabold text-slate-900">{m.totalProducts || 0}</span>
-            <Link
-              to="/products"
-              className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center"
-            >
-              Manage <ArrowUpRight size={14} />
-            </Link>
-          </div>
-          <p className="text-[11px] text-slate-400 mt-1">Catalog items registered</p>
-        </div>
 
-        {/* 2. Available Serials */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              Available Serials
-            </span>
-            <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-              <Barcode size={18} />
+          {/* Card 2: Actual Cash In Hand */}
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs hover:shadow-md transition">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                Cash Received in Hand
+              </span>
+              <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <HandCoins size={18} />
+              </div>
             </div>
-          </div>
-          <div className="flex items-baseline justify-between">
-            <span className="text-3xl font-extrabold text-emerald-700">{m.availableSerials || 0}</span>
-            <Link
-              to="/serials?status=Available"
-              className="text-xs font-semibold text-emerald-600 hover:text-emerald-800 flex items-center"
-            >
-              View Stock <ArrowUpRight size={14} />
-            </Link>
-          </div>
-          <p className="text-[11px] text-slate-400 mt-1">Ready for sale in shop</p>
-        </div>
-
-        {/* 3. Items Currently on Credit */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              Items on Credit
-            </span>
-            <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
-              <CreditCard size={18} />
+            <div className="text-3xl font-extrabold text-emerald-700">
+              ${totalCashInHand.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
+            <p className="text-[11px] text-slate-400 mt-2">
+              Direct cash sales + debt installments collected
+            </p>
           </div>
-          <div className="flex items-baseline justify-between">
-            <span className="text-3xl font-extrabold text-amber-700">{m.itemsOnCredit || 0}</span>
-            <Link
-              to="/serials?status=On+Credit"
-              className="text-xs font-semibold text-amber-600 hover:text-amber-800 flex items-center"
-            >
-              Credit Serials <ArrowUpRight size={14} />
-            </Link>
-          </div>
-          <p className="text-[11px] text-slate-400 mt-1">Given out with remaining debt</p>
-        </div>
 
-        {/* 4. Total Credit Outstanding */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              Outstanding Credit
-            </span>
-            <div className="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
-              <AlertTriangle size={18} />
+          {/* Card 3: Total Cost of Sold Items */}
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs hover:shadow-md transition">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                Cost of Goods Sold (COGS)
+              </span>
+              <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                <PackageCheck size={18} />
+              </div>
             </div>
+            <div className="text-3xl font-extrabold text-slate-800">
+              ${totalCostOfSold.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
+            <p className="text-[11px] text-slate-400 mt-2">
+              Original wholesale purchase cost of sold items
+            </p>
           </div>
-          <div className="flex items-baseline justify-between">
-            <span className="text-3xl font-extrabold text-rose-700">
-              ${m.totalCreditOutstanding?.toFixed(2) || '0.00'}
-            </span>
-            <Link
-              to="/customers"
-              className="text-xs font-semibold text-rose-600 hover:text-rose-800 flex items-center"
-            >
-              Customers <ArrowUpRight size={14} />
-            </Link>
-          </div>
-          <p className="text-[11px] text-slate-400 mt-1">
-            Total uncollected credit receivable
-          </p>
-        </div>
-      </div>
 
-      {/* Secondary Metrics Strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-white p-4 rounded-xl border border-slate-200 text-xs">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600">
-            <DollarSign size={16} />
-          </div>
-          <div>
-            <span className="text-slate-400 block text-[10px] uppercase">Cash Collected</span>
-            <span className="font-bold text-slate-800 text-sm">
-              ${m.totalCollected?.toFixed(2) || '0.00'}
-            </span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600">
-            <Users size={16} />
-          </div>
-          <div>
-            <span className="text-slate-400 block text-[10px] uppercase">Customers</span>
-            <span className="font-bold text-slate-800 text-sm">{m.totalCustomers || 0}</span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600">
-            <CheckCircle2 size={16} />
-          </div>
-          <div>
-            <span className="text-slate-400 block text-[10px] uppercase">Total Units Sold</span>
-            <span className="font-bold text-slate-800 text-sm">{m.itemsSold || 0}</span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600">
-            <CreditCard size={16} />
-          </div>
-          <div>
-            <span className="text-slate-400 block text-[10px] uppercase">Credit Volume</span>
-            <span className="font-bold text-slate-800 text-sm">
-              ${m.totalCreditIssued?.toFixed(2) || '0.00'}
-            </span>
+          {/* Card 4: Net Amount (Pure Net Profit) */}
+          <div className="bg-gradient-to-br from-emerald-950 via-slate-900 to-slate-950 text-white p-5 rounded-2xl shadow-md border border-emerald-900/60 relative overflow-hidden">
+            <div className="absolute right-0 top-0 w-28 h-28 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold text-emerald-300 uppercase tracking-wider">
+                Net Profit (Net Amount)
+              </span>
+              <div className="w-9 h-9 rounded-xl bg-emerald-900/80 text-emerald-300 flex items-center justify-center">
+                <TrendingUp size={18} />
+              </div>
+            </div>
+            <div className="text-3xl font-extrabold tracking-tight text-emerald-400">
+              {netProfit >= 0 ? '+' : ''}
+              ${netProfit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
+            <div className="mt-2 flex items-center justify-between text-[11px]">
+              <span className="text-slate-300">Total Sales − Cost</span>
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                {profitMargin}% Margin
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Active Credit Sales & Receivables Table */}
+      {/* 2. GRAPHICAL REPRESENTATIONS (Sales Trend Chart & Cash vs Debt Split) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Chart 1: Last 7 Days Sales Trend (Bar Chart) */}
+        <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg">
+                  <BarChart3 size={18} />
+                </div>
+                <h3 className="font-bold text-slate-900 text-sm">Last 7 Days Sales & Cash Inflow</h3>
+              </div>
+              <div className="flex items-center gap-4 text-xs font-medium">
+                <span className="flex items-center gap-1.5 text-indigo-600">
+                  <span className="w-2.5 h-2.5 rounded-xs bg-indigo-600"></span>
+                  Sales Volume
+                </span>
+                <span className="flex items-center gap-1.5 text-emerald-600">
+                  <span className="w-2.5 h-2.5 rounded-xs bg-emerald-500"></span>
+                  Cash Collected
+                </span>
+              </div>
+            </div>
+            <p className="text-xs text-slate-400 mb-6">
+              Daily comparison between items sold and cash received in your shop
+            </p>
+          </div>
+
+          {/* SVG Bar Chart */}
+          <div className="pt-2">
+            <div className="grid grid-cols-7 gap-2 sm:gap-4 items-end h-44 border-b border-slate-100 pb-2">
+              {dailyTrend.map((d, idx) => {
+                const salesHeight = Math.max(8, Math.round((d.sales / maxDaySales) * 100));
+                const collectedHeight = Math.max(8, Math.round((d.collected / maxDaySales) * 100));
+
+                return (
+                  <div key={idx} className="flex flex-col items-center justify-end h-full group">
+                    {/* Tooltip on hover */}
+                    <div className="opacity-0 group-hover:opacity-100 transition absolute -translate-y-28 bg-slate-900 text-white text-[10px] py-1 px-2 rounded-md shadow-lg pointer-events-none z-10 whitespace-nowrap">
+                      <p className="font-bold">{d.date}</p>
+                      <p className="text-indigo-300">Sales: ${d.sales.toFixed(2)}</p>
+                      <p className="text-emerald-300">Collected: ${d.collected.toFixed(2)}</p>
+                    </div>
+
+                    {/* Bars pair */}
+                    <div className="w-full flex items-end justify-center gap-1 sm:gap-1.5 h-36">
+                      <div
+                        style={{ height: `${salesHeight}%` }}
+                        className="w-1/2 max-w-[18px] bg-indigo-500 hover:bg-indigo-600 rounded-t-sm transition-all"
+                        title={`Sales: $${d.sales.toFixed(2)}`}
+                      ></div>
+                      <div
+                        style={{ height: `${collectedHeight}%` }}
+                        className="w-1/2 max-w-[18px] bg-emerald-400 hover:bg-emerald-500 rounded-t-sm transition-all"
+                        title={`Collected: $${d.collected.toFixed(2)}`}
+                      ></div>
+                    </div>
+
+                    {/* Day label */}
+                    <span className="text-[11px] font-medium text-slate-500 mt-2">
+                      {d.day}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="flex items-center justify-between text-[11px] text-slate-400 pt-2">
+              <span>Past 7 days performance</span>
+              <span>Updated in real-time</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Chart 2: Cash In Hand vs Credit Debt Split (Radial Visual) */}
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <div className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg">
+                <PieChart size={18} />
+              </div>
+              <h3 className="font-bold text-slate-900 text-sm">Cash vs Uncollected Debt</h3>
+            </div>
+            <p className="text-xs text-slate-400">
+              Distribution of sales revenue in hand vs customer debt
+            </p>
+          </div>
+
+          {/* Visual Donut / Gauge */}
+          <div className="my-6 flex flex-col items-center justify-center">
+            <div className="relative w-36 h-36 flex items-center justify-center">
+              {/* Outer SVG Ring */}
+              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                {/* Background Ring */}
+                <path
+                  className="text-amber-100"
+                  strokeWidth="3.5"
+                  stroke="currentColor"
+                  fill="none"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                />
+                {/* Collected Progress Ring */}
+                <path
+                  className="text-emerald-500 transition-all duration-1000 ease-out"
+                  strokeDasharray={`${cashCollectionPct}, 100`}
+                  strokeWidth="3.5"
+                  strokeLinecap="round"
+                  stroke="currentColor"
+                  fill="none"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                />
+              </svg>
+
+              <div className="absolute flex flex-col items-center justify-center text-center">
+                <span className="text-2xl font-black text-slate-900">{cashCollectionPct}%</span>
+                <span className="text-[10px] font-semibold uppercase text-slate-400">Collected</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Breakdown Legend */}
+          <div className="space-y-2 pt-2 border-t border-slate-100 text-xs">
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-1.5 text-slate-600">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                Cash in Hand:
+              </span>
+              <span className="font-bold text-emerald-700">
+                ${totalCashInHand.toFixed(2)}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-1.5 text-slate-600">
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+                Outstanding Debt:
+              </span>
+              <span className="font-bold text-amber-700">
+                ${totalCreditDebt.toFixed(2)}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. OPERATIONAL INVENTORY & STORE METRICS STRIP */}
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+            Inventory & Catalog Overview
+          </h2>
+          <span className="text-[11px] text-slate-400">
+            Wholesale Asset Valuation: <strong className="text-slate-700">${Number(m.currentInventoryCost || 0).toFixed(2)}</strong>
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* 1. Total Catalog Products */}
+          <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                Catalog Models
+              </span>
+              <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                <Package size={18} />
+              </div>
+            </div>
+            <div className="flex items-baseline justify-between">
+              <span className="text-3xl font-extrabold text-slate-900">{m.totalProducts || 0}</span>
+              <Link
+                to="/products"
+                className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center"
+              >
+                Catalog <ArrowUpRight size={14} />
+              </Link>
+            </div>
+            <p className="text-[11px] text-slate-400 mt-1">Total registered item lines</p>
+          </div>
+
+          {/* 2. Available Serials */}
+          <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                Available In Store
+              </span>
+              <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <Barcode size={18} />
+              </div>
+            </div>
+            <div className="flex items-baseline justify-between">
+              <span className="text-3xl font-extrabold text-emerald-700">{m.availableSerials || 0}</span>
+              <Link
+                to="/serials?status=Available"
+                className="text-xs font-semibold text-emerald-600 hover:text-emerald-800 flex items-center"
+              >
+                In Stock <ArrowUpRight size={14} />
+              </Link>
+            </div>
+            <p className="text-[11px] text-slate-400 mt-1">Ready for instant sale</p>
+          </div>
+
+          {/* 3. Items On Credit */}
+          <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                Items on Credit
+              </span>
+              <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                <CreditCard size={18} />
+              </div>
+            </div>
+            <div className="flex items-baseline justify-between">
+              <span className="text-3xl font-extrabold text-amber-700">{m.itemsOnCredit || 0}</span>
+              <Link
+                to="/serials?status=On+Credit"
+                className="text-xs font-semibold text-amber-600 hover:text-amber-800 flex items-center"
+              >
+                Credit Items <ArrowUpRight size={14} />
+              </Link>
+            </div>
+            <p className="text-[11px] text-slate-400 mt-1">Units handed over with pending debt</p>
+          </div>
+
+          {/* 4. Total Units Sold */}
+          <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                Total Units Sold
+              </span>
+              <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                <CheckCircle2 size={18} />
+              </div>
+            </div>
+            <div className="flex items-baseline justify-between">
+              <span className="text-3xl font-extrabold text-slate-900">{m.itemsSold || 0}</span>
+              <Link
+                to="/serials?status=Sold"
+                className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center"
+              >
+                Sales History <ArrowUpRight size={14} />
+              </Link>
+            </div>
+            <p className="text-[11px] text-slate-400 mt-1">Full cash sold PCs & items</p>
+          </div>
+        </div>
+      </div>
+
+      {/* 4. ACTIVE CREDIT RECEIVABLES TABLE */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
           <div>
@@ -328,28 +556,26 @@ const Dashboard = () => {
                       {s.serialNumber}
                     </td>
                     <td className="px-6 py-3.5">
-                      <p className="font-semibold text-slate-800">{s.product?.name}</p>
-                      <p className="text-[11px] text-slate-400">
+                      <p className="font-semibold text-slate-800">{s.product?.name || '—'}</p>
+                      <p className="text-[10px] text-slate-400">
                         {s.product?.brand} {s.product?.model}
                       </p>
                     </td>
                     <td className="px-6 py-3.5">
-                      <p className="font-semibold text-slate-900">{s.customer?.name}</p>
-                      <p className="text-[11px] text-slate-400">{s.customer?.phone}</p>
+                      <p className="font-medium text-slate-800">{s.customer?.name || 'Walk-in'}</p>
+                      <p className="text-[10px] text-slate-400">{s.customer?.phone || 'No phone'}</p>
                     </td>
-                    <td className="px-6 py-3.5 font-medium text-slate-700">
+                    <td className="px-6 py-3.5 font-semibold text-slate-900">
                       ${s.creditAmount?.toFixed(2)}
                     </td>
-                    <td className="px-6 py-3.5 text-emerald-700 font-medium">
+                    <td className="px-6 py-3.5 font-medium text-emerald-600">
                       ${s.paidAmount?.toFixed(2)}
                     </td>
-                    <td className="px-6 py-3.5">
-                      <span className="font-bold text-amber-700 bg-amber-50 px-2 py-1 rounded-md border border-amber-200">
-                        ${s.remainingBalance?.toFixed(2)}
-                      </span>
+                    <td className="px-6 py-3.5 font-bold text-amber-600">
+                      ${s.remainingBalance?.toFixed(2)}
                     </td>
                     <td className="px-6 py-3.5">
-                      <CreditBadge creditStatus={s.creditStatus} />
+                      <CreditBadge status={s.creditStatus} />
                     </td>
                     <td className="px-6 py-3.5 text-right">
                       <button
@@ -357,10 +583,10 @@ const Dashboard = () => {
                           setSelectedCreditSerial(s);
                           setIsPaymentModalOpen(true);
                         }}
-                        className="px-3 py-1.5 text-xs font-semibold text-white bg-amber-600 hover:bg-amber-700 rounded-lg shadow-2xs transition flex items-center gap-1 ml-auto"
+                        className="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-semibold text-[11px] shadow-2xs transition inline-flex items-center gap-1"
                       >
-                        <HandCoins size={13} />
-                        <span>Record Payment</span>
+                        <HandCoins size={12} />
+                        <span>Collect</span>
                       </button>
                     </td>
                   </tr>
@@ -371,131 +597,18 @@ const Dashboard = () => {
         )}
       </div>
 
-      {/* Two Column Section: Recent Payments & Fast Shortcuts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Payment Receipts */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="font-bold text-sm text-slate-900">Recent Payment Receipts</h3>
-              <p className="text-xs text-slate-500">Latest installment payments collected</p>
-            </div>
-            <Link
-              to="/serials"
-              className="text-xs font-medium text-indigo-600 hover:text-indigo-800"
-            >
-              Browse Serials
-            </Link>
-          </div>
-
-          {data?.recentPayments?.length === 0 ? (
-            <p className="text-xs text-slate-400 text-center py-8">No payments logged yet.</p>
-          ) : (
-            <div className="space-y-3">
-              {data?.recentPayments?.map((p) => (
-                <div
-                  key={p._id}
-                  className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100 text-xs"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
-                      <DollarSign size={16} />
-                    </div>
-                    <div>
-                      <p className="font-bold text-slate-900">{p.customer?.name || 'Customer'}</p>
-                      <p className="text-[11px] text-slate-500">
-                        SN: {p.serialNumber?.serialNumber || 'Item'} • {p.paymentMethod}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-extrabold text-emerald-700 text-sm">
-                      +${p.amount?.toFixed(2)}
-                    </p>
-                    <p className="text-[10px] text-slate-400">
-                      {new Date(p.paymentDate).toLocaleDateString()}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Quick Operations Guide */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-6 flex flex-col justify-between">
-          <div>
-            <h3 className="font-bold text-sm text-slate-900 mb-1">
-              Shop Operation Workflows
-            </h3>
-            <p className="text-xs text-slate-500 mb-4">
-              Standard operating procedures for electronics store staff
-            </p>
-
-            <div className="space-y-3 text-xs">
-              <div className="p-3 rounded-xl bg-indigo-50/60 border border-indigo-100 flex items-start gap-3">
-                <div className="w-6 h-6 rounded-md bg-indigo-600 text-white flex items-center justify-center shrink-0 font-bold text-[11px]">
-                  1
-                </div>
-                <div>
-                  <p className="font-semibold text-indigo-900">Register Inventory Serials</p>
-                  <p className="text-slate-600 mt-0.5">
-                    When new electronics arrive, add the product model then register all IMEI or
-                    serial numbers in bulk with your scanner.
-                  </p>
-                </div>
-              </div>
-
-              <div className="p-3 rounded-xl bg-amber-50/60 border border-amber-100 flex items-start gap-3">
-                <div className="w-6 h-6 rounded-md bg-amber-600 text-white flex items-center justify-center shrink-0 font-bold text-[11px]">
-                  2
-                </div>
-                <div>
-                  <p className="font-semibold text-amber-900">Issuing on Credit</p>
-                  <p className="text-slate-600 mt-0.5">
-                    Go to Serials, choose any Available item and click "Sell/Issue". Select the
-                    customer, agreed credit amount and any initial down payment.
-                  </p>
-                </div>
-              </div>
-
-              <div className="p-3 rounded-xl bg-emerald-50/60 border border-emerald-100 flex items-start gap-3">
-                <div className="w-6 h-6 rounded-md bg-emerald-600 text-white flex items-center justify-center shrink-0 font-bold text-[11px]">
-                  3
-                </div>
-                <div>
-                  <p className="font-semibold text-emerald-900">Collecting Installments</p>
-                  <p className="text-slate-600 mt-0.5">
-                    When a neighbor or customer returns to make a payment, click "Record Payment".
-                    The remaining balance and status are calculated automatically.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="pt-4 border-t border-slate-100 mt-4 flex items-center justify-between">
-            <span className="text-xs text-slate-500">Need to onboard a new customer?</span>
-            <button
-              onClick={() => setIsAddCustomerOpen(true)}
-              className="text-xs font-semibold text-indigo-600 hover:text-indigo-800"
-            >
-              + Add Customer
-            </button>
-          </div>
-        </div>
-      </div>
-
       {/* Modals */}
-      <RecordPaymentModal
-        isOpen={isPaymentModalOpen}
-        onClose={() => {
-          setIsPaymentModalOpen(false);
-          setSelectedCreditSerial(null);
-        }}
-        onSubmit={handleRecordPayment}
-        serial={selectedCreditSerial}
-      />
+      {selectedCreditSerial && (
+        <RecordPaymentModal
+          isOpen={isPaymentModalOpen}
+          onClose={() => {
+            setIsPaymentModalOpen(false);
+            setSelectedCreditSerial(null);
+          }}
+          onSubmit={handleRecordPayment}
+          serial={selectedCreditSerial}
+        />
+      )}
 
       <AddSerialsModal
         isOpen={isAddSerialsOpen}
@@ -520,4 +633,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-

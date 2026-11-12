@@ -161,23 +161,97 @@ const ProductModal = ({ isOpen, onClose, onSubmit, product = null }) => {
             </div>
           </div>
 
-          {/* Direct Serial Number Input at Registration */}
-          {!product && (
+          {/* Serial Tracking Option Toggle */}
+          <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl">
+            <div>
+              <span className="text-xs font-semibold text-slate-800 block">
+                {formData.hasSerial ? 'Individual Serial Number Tracking' : 'Bulk / Non-Serialized Stock'}
+              </span>
+              <span className="text-[11px] text-slate-500">
+                {formData.hasSerial
+                  ? 'PCs, Laptops, and Phones tracked by unique Serial / IMEI'
+                  : 'Cables, Mice, RAM, Adapters tracked by quantity count only'}
+              </span>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer shrink-0 ml-3">
+              <input
+                type="checkbox"
+                checked={formData.hasSerial}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+                  setFormData((prev) => ({
+                    ...prev,
+                    hasSerial: checked
+                  }));
+                }}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+            </label>
+          </div>
+
+          {/* If Serialized: Direct Serial Number Input */}
+          {!product && formData.hasSerial && (
             <div className="p-3.5 bg-indigo-50/60 border border-indigo-200 rounded-xl space-y-1.5">
-              <div className="flex items-center gap-1.5 text-indigo-900 font-semibold text-xs">
-                <Barcode size={16} className="text-indigo-600" />
-                <span>Serial Number(s) / Service Tag / IMEI</span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-indigo-900 font-semibold text-xs">
+                  <Barcode size={16} className="text-indigo-600" />
+                  <span>Serial Number(s) / Service Tag / IMEI</span>
+                </div>
+                {formData.serialNumbers && (
+                  <span className="text-[11px] font-semibold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded">
+                    {
+                      formData.serialNumbers
+                        .split(/[\n,]+/)
+                        .map((s) => s.trim())
+                        .filter(Boolean).length
+                    }{' '}
+                    Pcs detected
+                  </span>
+                )}
               </div>
               <textarea
                 rows={2}
-                placeholder="Enter serial number here (e.g. DELL-PC-77821) or multiple separated by comma or new line"
+                placeholder="Enter serial number (e.g. DELL-PC-77821) or multiple separated by comma or new line"
                 value={formData.serialNumbers}
-                onChange={(e) => setFormData({ ...formData, serialNumbers: e.target.value })}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  const count = val.split(/[\n,]+/).map((s) => s.trim()).filter(Boolean).length;
+                  setFormData({
+                    ...formData,
+                    serialNumbers: val,
+                    stockQuantity: count > 0 ? count : formData.stockQuantity
+                  });
+                }}
                 className="w-full font-mono text-xs uppercase px-3 py-2 bg-white rounded-lg border border-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
               <p className="text-[11px] text-slate-500">
-                You can scan the barcode directly or type the serial number so you can identify it later when giving it to a neighbor shop.
+                You can scan with a barcode scanner or paste multiple serials. Each serial represents 1 physical PC in your store.
               </p>
+            </div>
+          )}
+
+          {/* If Non-Serialized: Quantity Field */}
+          {(!formData.hasSerial || product) && (
+            <div className="p-3 bg-amber-50/60 border border-amber-200 rounded-xl flex items-center justify-between">
+              <div>
+                <label className="block text-xs font-semibold text-amber-900 uppercase">
+                  Quantity / Pcs Bought *
+                </label>
+                <p className="text-[11px] text-amber-700">
+                  How many pieces of this item did you purchase for the shop?
+                </p>
+              </div>
+              <input
+                type="number"
+                min="1"
+                required
+                value={formData.stockQuantity}
+                onChange={(e) =>
+                  setFormData({ ...formData, stockQuantity: parseInt(e.target.value, 10) || 1 })
+                }
+                className="w-24 px-3 py-1.5 text-center font-bold text-sm bg-white rounded-lg border border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-500"
+              />
             </div>
           )}
 
@@ -229,6 +303,30 @@ const ProductModal = ({ isOpen, onClose, onSubmit, product = null }) => {
               />
             </div>
           </div>
+
+          {/* Live Investment & Margin Summary */}
+          {Number(formData.purchasePrice) > 0 && Number(formData.sellingPrice) > 0 && (
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs space-y-1">
+              <div className="flex items-center justify-between text-slate-600">
+                <span>Unit Margin / Profit:</span>
+                <span className="font-semibold text-emerald-600">
+                  +${(Number(formData.sellingPrice) - Number(formData.purchasePrice)).toFixed(2)} (
+                  {(
+                    ((Number(formData.sellingPrice) - Number(formData.purchasePrice)) /
+                      Number(formData.purchasePrice)) *
+                    100
+                  ).toFixed(1)}
+                  %)
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-slate-700 font-medium pt-1 border-t border-slate-200/60">
+                <span>Total Batch Investment ({formData.stockQuantity || 1} pcs):</span>
+                <span className="font-bold text-slate-900">
+                  ${(Number(formData.purchasePrice) * (Number(formData.stockQuantity) || 1)).toFixed(2)}
+                </span>
+              </div>
+            </div>
+          )}
 
           <div>
             <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">
