@@ -493,7 +493,7 @@ const Users = () => {
               {/* Role Selection */}
               <div>
                 <label className="block text-xs font-semibold text-slate-700 uppercase mb-1.5">
-                  Select Role & Responsibilities
+                  Select Role
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   {/* Sales */}
