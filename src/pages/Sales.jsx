@@ -286,42 +286,42 @@ const Sales = () => {
 
         <form onSubmit={handleCompleteSale} className="p-6 space-y-4 text-xs">
           {/* SEARCHABLE ITEM DROPDOWN */}
-          <div ref={itemDropdownRef} className="relative">
-            <label className="block font-semibold text-slate-700 uppercase mb-1">
+          <div ref={itemDropdownRef} className="relative max-w-sm">
+            <label className="block font-semibold text-slate-700 uppercase text-[11px] mb-1">
               Select Item to Sell *
             </label>
 
             {/* Dropdown Trigger Button */}
             <div
               onClick={() => setIsItemDropdownOpen(!isItemDropdownOpen)}
-              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl cursor-pointer flex items-center justify-between text-sm hover:border-indigo-400 focus:ring-2 focus:ring-indigo-500 transition"
+              className="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl cursor-pointer flex items-center justify-between text-xs hover:border-indigo-400 focus:ring-2 focus:ring-indigo-500 transition"
             >
               {selectedProduct ? (
                 <div className="flex items-center justify-between w-full pr-2">
-                  <div className="flex items-center gap-2">
-                    <Package size={16} className="text-indigo-600 shrink-0" />
-                    <span className="font-bold text-slate-900">{selectedProduct.name}</span>
+                  <div className="flex items-center gap-2 truncate">
+                    <Package size={15} className="text-indigo-600 shrink-0" />
+                    <span className="font-bold text-slate-900 truncate">{selectedProduct.name}</span>
                     {selectedProduct.brand && (
-                      <span className="text-xs text-slate-500">({selectedProduct.brand})</span>
+                      <span className="text-[11px] text-slate-500 shrink-0">({selectedProduct.brand})</span>
                     )}
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 shrink-0 ml-2">
                     <span className="text-xs font-bold text-indigo-700">
                       ${Number(selectedProduct.sellingPrice).toFixed(2)}
                     </span>
                     <span
-                      className={`text-[11px] font-extrabold px-2 py-0.5 rounded ${
+                      className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded ${
                         maxStock > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
                       }`}
                     >
-                      {maxStock > 0 ? `${maxStock} in stock` : 'Out of stock'}
+                      {maxStock > 0 ? `${maxStock} in stock` : '0 in stock'}
                     </span>
                   </div>
                 </div>
               ) : (
-                <span className="text-slate-400 font-medium flex items-center gap-2">
-                  <Search size={15} />
-                  <span>Click to search & select item...</span>
+                <span className="text-slate-400 font-medium flex items-center gap-2 text-xs">
+                  <Search size={14} />
+                  <span>Search & select item...</span>
                 </span>
               )}
 
@@ -335,11 +335,11 @@ const Sales = () => {
                     }}
                     className="p-1 text-slate-400 hover:text-slate-700 rounded-md"
                   >
-                    <X size={15} />
+                    <X size={14} />
                   </button>
                 )}
                 <ChevronDown
-                  size={16}
+                  size={15}
                   className={`text-slate-400 transition-transform ${isItemDropdownOpen ? 'rotate-180' : ''}`}
                 />
               </div>
@@ -347,7 +347,7 @@ const Sales = () => {
 
             {/* Dropdown Popover with Search Bar */}
             {isItemDropdownOpen && (
-              <div className="absolute top-full left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-2xl shadow-xl z-30 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+              <div className="absolute top-full left-0 w-full min-w-[320px] max-w-sm mt-1.5 bg-white border border-slate-200 rounded-2xl shadow-xl z-30 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
                 {/* Search Bar inside dropdown */}
                 <div className="p-2.5 bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
                   <div className="relative">
