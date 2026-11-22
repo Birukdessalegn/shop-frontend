@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import {
   LayoutDashboard,
   Package,
-  Barcode,
+  ShoppingBag,
   Users,
   UserCog,
   LogOut,
@@ -12,16 +12,13 @@ import {
   UserCheck,
   Menu,
   X,
-  Store,
-  SearchCheck
+  Store
 } from 'lucide-react';
-import VerifyItemModal from './VerifyItemModal';
 
 const Layout = () => {
-  const { user, logout, isAdmin } = useAuth();
+  const { user, logout, isAdmin, isSales, isStock } = useAuth();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isVerifyModalOpen, setIsVerifyModalOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -30,9 +27,15 @@ const Layout = () => {
 
   const navItems = [
     { to: '/', label: 'Dashboard', icon: LayoutDashboard },
-    { to: '/products', label: 'Items & Catalog', icon: Package },
-    { to: '/serials', label: 'Serial Numbers', icon: Barcode },
-    { to: '/customers', label: 'Customers & Credit', icon: Users },
+    ...(isAdmin || isStock || user?.role === 'staff'
+      ? [{ to: '/products', label: 'Items & Stock', icon: Package }]
+      : []),
+    ...(isAdmin || isSales || user?.role === 'staff'
+      ? [{ to: '/sales', label: 'Sell / POS', icon: ShoppingBag }]
+      : []),
+    ...(isAdmin || isSales || user?.role === 'staff'
+      ? [{ to: '/customers', label: 'Customers & Credit', icon: Users }]
+      : []),
     ...(isAdmin ? [{ to: '/users', label: 'Staff & Users', icon: UserCog }] : [])
   ];
 
@@ -46,24 +49,15 @@ const Layout = () => {
           </div>
           <div>
             <h1 className="font-bold text-base leading-tight">ElectroShop</h1>
-            <p className="text-[10px] text-slate-400">Inventory & Serial Verification</p>
+            <p className="text-[10px] text-slate-400">Inventory & Sales System</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setIsVerifyModalOpen(true)}
-            className="p-1.5 rounded-lg bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 text-xs flex items-center gap-1"
-          >
-            <SearchCheck size={16} />
-            <span className="font-semibold text-[11px]">Verify</span>
-          </button>
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
-          >
-            {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
-          </button>
-        </div>
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
+        >
+          {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+        </button>
       </header>
 
       {/* Mobile Dropdown Nav */}
@@ -116,25 +110,9 @@ const Layout = () => {
               <h1 className="font-bold text-lg text-white tracking-tight leading-none">
                 ElectroShop
               </h1>
-              <span className="text-xs text-indigo-400 font-medium">Inventory & Serial OS</span>
+              <span className="text-xs text-indigo-400 font-medium">Inventory & Sales</span>
             </div>
           </div>
-        </div>
-
-        {/* Quick Ownership Verification Tool Button */}
-        <div className="px-4 pt-4">
-          <button
-            onClick={() => setIsVerifyModalOpen(true)}
-            className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-emerald-950/60 hover:bg-emerald-900/70 border border-emerald-700/60 text-emerald-300 text-xs font-semibold shadow-xs transition"
-          >
-            <div className="flex items-center gap-2">
-              <SearchCheck size={16} className="text-emerald-400" />
-              <span>Verify Item Serial</span>
-            </div>
-            <span className="text-[10px] bg-emerald-500/20 px-1.5 py-0.5 rounded text-emerald-300 font-mono">
-              Check
-            </span>
-          </button>
         </div>
 
         {/* Navigation Links */}
@@ -200,12 +178,6 @@ const Layout = () => {
           <Outlet />
         </div>
       </main>
-
-      {/* Global Ownership Verification Modal */}
-      <VerifyItemModal
-        isOpen={isVerifyModalOpen}
-        onClose={() => setIsVerifyModalOpen(false)}
-      />
     </div>
   );
 };

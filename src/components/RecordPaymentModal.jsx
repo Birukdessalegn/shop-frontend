@@ -38,7 +38,7 @@ const RecordPaymentModal = ({ isOpen, onClose, onSubmit, serial = null }) => {
 
     try {
       setLoading(true);
-      await onSubmit(serial._id, {
+      await onSubmit(serial._id || serial.id, {
         amount: paymentNum,
         paymentMethod,
         notes,
@@ -61,7 +61,10 @@ const RecordPaymentModal = ({ isOpen, onClose, onSubmit, serial = null }) => {
             <HandCoins size={20} className="text-emerald-400" />
             <div>
               <h3 className="font-semibold text-base">Record Credit Payment</h3>
-              <p className="text-xs text-slate-400">SN: {serial.serialNumber}</p>
+              <p className="text-xs text-slate-400">
+                {serial.product?.name ? `${serial.product.name}` : 'Customer Credit Account'}
+                {serial.serialNumber ? ` (SN: ${serial.serialNumber})` : ''}
+              </p>
             </div>
           </div>
           <button
@@ -88,7 +91,7 @@ const RecordPaymentModal = ({ isOpen, onClose, onSubmit, serial = null }) => {
             <div className="p-2 bg-white rounded-lg border border-slate-200">
               <span className="text-slate-400 text-[10px] uppercase block">Total Credit</span>
               <span className="font-bold text-slate-800 text-sm">
-                ${serial.creditAmount?.toFixed(2)}
+                ${Number(serial.totalAmount || serial.creditAmount || 0).toFixed(2)}
               </span>
             </div>
             <div className="p-2 bg-emerald-50 rounded-lg border border-emerald-100">

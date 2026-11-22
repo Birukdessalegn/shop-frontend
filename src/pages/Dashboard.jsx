@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { dashboardAPI, serialAPI, customerAPI, productAPI } from '../services/api';
+import { dashboardAPI, saleAPI, productAPI, customerAPI } from '../services/api';
 import {
   Package,
-  Barcode,
   CreditCard,
   AlertTriangle,
   ArrowUpRight,
@@ -16,16 +15,13 @@ import {
   HandCoins,
   TrendingUp,
   PackageCheck,
-  Wallet,
   BarChart3,
   PieChart,
-  ShieldCheck
+  Boxes
 } from 'lucide-react';
-import { StatusBadge, CreditBadge } from '../components/StatusBadge';
-import RecordPaymentModal from '../components/RecordPaymentModal';
-import AddSerialsModal from '../components/AddSerialsModal';
+import { CreditBadge } from '../components/StatusBadge';
 import ProductModal from '../components/ProductModal';
-import CustomerModal from '../components/CustomerModal';
+import RecordPaymentModal from '../components/RecordPaymentModal';
 
 const Dashboard = () => {
   const [data, setData] = useState(null);
@@ -34,26 +30,16 @@ const Dashboard = () => {
   const [error, setError] = useState('');
 
   // Modals state
-  const [selectedCreditSerial, setSelectedCreditSerial] = useState(null);
+  const [selectedCreditSale, setSelectedCreditSale] = useState(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const [isAddSerialsOpen, setIsAddSerialsOpen] = useState(false);
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
-  const [isAddCustomerOpen, setIsAddCustomerOpen] = useState(false);
-  const [allProducts, setAllProducts] = useState([]);
 
   const fetchDashboardData = async () => {
     try {
       setError('');
-      const [dashRes, prodRes] = await Promise.all([
-        dashboardAPI.getStats(),
-        productAPI.getAll()
-      ]);
-
+      const dashRes = await dashboardAPI.getStats();
       if (dashRes.data.success) {
         setData(dashRes.data.data);
-      }
-      if (prodRes.data.success) {
-        setAllProducts(prodRes.data.data);
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load dashboard data');
@@ -72,13 +58,8 @@ const Dashboard = () => {
     fetchDashboardData();
   };
 
-  const handleRecordPayment = async (serialId, payload) => {
-    await serialAPI.recordPayment(serialId, payload);
-    fetchDashboardData();
-  };
-
-  const handleAddSerials = async (payload) => {
-    await serialAPI.addSerials(payload);
+  const handleRecordPayment = async (saleId, payload) => {
+    await saleAPI.recordPayment(saleId, payload);
     fetchDashboardData();
   };
 
@@ -87,30 +68,24 @@ const Dashboard = () => {
     fetchDashboardData();
   };
 
-  const handleAddCustomer = async (payload) => {
-    await customerAPI.create(payload);
-    fetchDashboardData();
-  };
-
   if (loading) {
     return (
       <div className="py-24 flex flex-col items-center justify-center">
         <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-        <p className="mt-4 text-sm font-medium text-slate-500">Loading shop telemetry...</p>
+        <p className="mt-4 text-sm font-medium text-slate-500">Loading shop overview...</p>
       </div>
     );
   }
 
   const m = data?.metrics || {};
   const dailyTrend = data?.dailyTrend || [];
-  const categoryBreakdown = data?.categoryBreakdown || [];
 
   // Financial aggregates
   const totalGrossSales = Number(m.totalGrossSales || 0);
   const totalCostOfSold = Number(m.totalCostOfSold || 0);
   const netProfit = Number(m.netProfit || 0);
   const profitMargin = Number(m.profitMargin || 0);
-  const totalCashInHand = Number(m.totalCollected || 0) + Number(m.totalCashSales || 0);
+  const totalCashInHand = Number(m.totalCollected || 0);
   const totalCreditDebt = Number(m.totalCreditOutstanding || 0);
   const totalReceivablesPool = totalCashInHand + totalCreditDebt;
   const cashCollectionPct =
@@ -121,14 +96,6 @@ const Dashboard = () => {
   // Chart max scale helper
   const maxDaySales = Math.max(...dailyTrend.map((d) => Math.max(d.sales || 0, d.collected || 0)), 100);
 
-  // Total inventory pie counts
-  const totalInventoryTracked =
-    (m.availableSerials || 0) +
-    (m.itemsOnCredit || 0) +
-    (m.itemsSold || 0) +
-    (m.itemsDamaged || 0) +
-    (m.itemsReturned || 0);
-
   return (
     <div className="space-y-6">
       {/* Top Header & Actions */}
@@ -136,7 +103,7 @@ const Dashboard = () => {
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Shop Financial Dashboard</h1>
           <p className="text-xs text-slate-500 mt-0.5">
-            Real-time sales revenue, net profit margin, debt receivables, and inventory telemetry
+            Real-time sales revenue, net profit margin, debt receivables, and stock counts
           </p>
         </div>
 
@@ -166,14 +133,14 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* 1. PRIMARY FINANCIAL TELEMETRY CARDS (Gross Sales, Cash in Hand, Cost, Net Profit) */}
+      {/* 1. FINANCIAL PERFORMANCE CARDS (Gross Sales, Cash in Hand, Cost, Net Profit) */}
       <div>
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-            Financial & Sales Performance
+            Financial & Profit Telemetry
           </h2>
           <span className="text-[11px] text-slate-400">
-            Real-time Profit & Cost Engine
+            Real-time Sales & Net Margin
           </span>
         </div>
 
@@ -212,7 +179,7 @@ const Dashboard = () => {
               ${totalCashInHand.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
             <p className="text-[11px] text-slate-400 mt-2">
-              Direct cash sales + debt installments collected
+              Direct cash sales + customer debt installments collected
             </p>
           </div>
 
@@ -220,7 +187,7 @@ const Dashboard = () => {
           <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs hover:shadow-md transition">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Cost of Goods Sold (COGS)
+                Cost of Sold Goods (COGS)
               </span>
               <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
                 <PackageCheck size={18} />
@@ -259,7 +226,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* 2. GRAPHICAL REPRESENTATIONS (Sales Trend Chart & Cash vs Debt Split) */}
+      {/* 2. GRAPHICAL CHARTS (Sales Trend & Cash vs Debt Split) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Chart 1: Last 7 Days Sales Trend (Bar Chart) */}
         <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
@@ -287,7 +254,6 @@ const Dashboard = () => {
             </p>
           </div>
 
-          {/* SVG Bar Chart */}
           <div className="pt-2">
             <div className="grid grid-cols-7 gap-2 sm:gap-4 items-end h-44 border-b border-slate-100 pb-2">
               {dailyTrend.map((d, idx) => {
@@ -296,14 +262,12 @@ const Dashboard = () => {
 
                 return (
                   <div key={idx} className="flex flex-col items-center justify-end h-full group">
-                    {/* Tooltip on hover */}
                     <div className="opacity-0 group-hover:opacity-100 transition absolute -translate-y-28 bg-slate-900 text-white text-[10px] py-1 px-2 rounded-md shadow-lg pointer-events-none z-10 whitespace-nowrap">
                       <p className="font-bold">{d.date}</p>
                       <p className="text-indigo-300">Sales: ${d.sales.toFixed(2)}</p>
                       <p className="text-emerald-300">Collected: ${d.collected.toFixed(2)}</p>
                     </div>
 
-                    {/* Bars pair */}
                     <div className="w-full flex items-end justify-center gap-1 sm:gap-1.5 h-36">
                       <div
                         style={{ height: `${salesHeight}%` }}
@@ -317,10 +281,7 @@ const Dashboard = () => {
                       ></div>
                     </div>
 
-                    {/* Day label */}
-                    <span className="text-[11px] font-medium text-slate-500 mt-2">
-                      {d.day}
-                    </span>
+                    <span className="text-[11px] font-medium text-slate-500 mt-2">{d.day}</span>
                   </div>
                 );
               })}
@@ -332,7 +293,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Chart 2: Cash In Hand vs Credit Debt Split (Radial Visual) */}
+        {/* Chart 2: Cash In Hand vs Credit Debt Split */}
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-2 mb-1">
@@ -346,12 +307,9 @@ const Dashboard = () => {
             </p>
           </div>
 
-          {/* Visual Donut / Gauge */}
           <div className="my-6 flex flex-col items-center justify-center">
             <div className="relative w-36 h-36 flex items-center justify-center">
-              {/* Outer SVG Ring */}
               <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                {/* Background Ring */}
                 <path
                   className="text-amber-100"
                   strokeWidth="3.5"
@@ -359,7 +317,6 @@ const Dashboard = () => {
                   fill="none"
                   d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                 />
-                {/* Collected Progress Ring */}
                 <path
                   className="text-emerald-500 transition-all duration-1000 ease-out"
                   strokeDasharray={`${cashCollectionPct}, 100`}
@@ -378,47 +335,42 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Breakdown Legend */}
           <div className="space-y-2 pt-2 border-t border-slate-100 text-xs">
             <div className="flex items-center justify-between">
               <span className="flex items-center gap-1.5 text-slate-600">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
                 Cash in Hand:
               </span>
-              <span className="font-bold text-emerald-700">
-                ${totalCashInHand.toFixed(2)}
-              </span>
+              <span className="font-bold text-emerald-700">${totalCashInHand.toFixed(2)}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="flex items-center gap-1.5 text-slate-600">
                 <span className="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
                 Outstanding Debt:
               </span>
-              <span className="font-bold text-amber-700">
-                ${totalCreditDebt.toFixed(2)}
-              </span>
+              <span className="font-bold text-amber-700">${totalCreditDebt.toFixed(2)}</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* 3. OPERATIONAL INVENTORY & STORE METRICS STRIP */}
+      {/* 3. STOCK & STORE OVERVIEW STRIP */}
       <div>
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-            Inventory & Catalog Overview
+            Inventory & Store Stock
           </h2>
           <span className="text-[11px] text-slate-400">
-            Wholesale Asset Valuation: <strong className="text-slate-700">${Number(m.currentInventoryCost || 0).toFixed(2)}</strong>
+            Total Inventory Valuation: <strong className="text-slate-700">${Number(m.currentInventoryCost || 0).toFixed(2)}</strong>
           </span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* 1. Total Catalog Products */}
+          {/* Total Catalog Items */}
           <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Catalog Models
+                Catalog Items
               </span>
               <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
                 <Package size={18} />
@@ -426,61 +378,54 @@ const Dashboard = () => {
             </div>
             <div className="flex items-baseline justify-between">
               <span className="text-3xl font-extrabold text-slate-900">{m.totalProducts || 0}</span>
-              <Link
-                to="/products"
-                className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center"
-              >
-                Catalog <ArrowUpRight size={14} />
+              <Link to="/products" className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center">
+                Manage <ArrowUpRight size={14} />
               </Link>
             </div>
-            <p className="text-[11px] text-slate-400 mt-1">Total registered item lines</p>
+            <p className="text-[11px] text-slate-400 mt-1">Product lines registered</p>
           </div>
 
-          {/* 2. Available Serials */}
+          {/* Total Pieces in Stock */}
           <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Available In Store
+                Total Pieces in Store
               </span>
               <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                <Barcode size={18} />
+                <Boxes size={18} />
               </div>
             </div>
             <div className="flex items-baseline justify-between">
-              <span className="text-3xl font-extrabold text-emerald-700">{m.availableSerials || 0}</span>
-              <Link
-                to="/serials?status=Available"
-                className="text-xs font-semibold text-emerald-600 hover:text-emerald-800 flex items-center"
-              >
-                In Stock <ArrowUpRight size={14} />
+              <span className="text-3xl font-extrabold text-emerald-700">{m.totalStockPieces || 0} Pcs</span>
+              <Link to="/products" className="text-xs font-semibold text-emerald-600 hover:text-emerald-800 flex items-center">
+                View Stock <ArrowUpRight size={14} />
               </Link>
             </div>
-            <p className="text-[11px] text-slate-400 mt-1">Ready for instant sale</p>
+            <p className="text-[11px] text-slate-400 mt-1">Physical units ready for sale</p>
           </div>
 
-          {/* 3. Items On Credit */}
+          {/* Outstanding Debt Receivables */}
           <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Items on Credit
+                Outstanding Credit
               </span>
-              <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
-                <CreditCard size={18} />
+              <div className="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
+                <AlertTriangle size={18} />
               </div>
             </div>
             <div className="flex items-baseline justify-between">
-              <span className="text-3xl font-extrabold text-amber-700">{m.itemsOnCredit || 0}</span>
-              <Link
-                to="/serials?status=On+Credit"
-                className="text-xs font-semibold text-amber-600 hover:text-amber-800 flex items-center"
-              >
-                Credit Items <ArrowUpRight size={14} />
+              <span className="text-3xl font-extrabold text-rose-700">
+                ${m.totalCreditOutstanding?.toFixed(2) || '0.00'}
+              </span>
+              <Link to="/customers" className="text-xs font-semibold text-rose-600 hover:text-rose-800 flex items-center">
+                Customers <ArrowUpRight size={14} />
               </Link>
             </div>
-            <p className="text-[11px] text-slate-400 mt-1">Units handed over with pending debt</p>
+            <p className="text-[11px] text-slate-400 mt-1">Uncollected customer debt</p>
           </div>
 
-          {/* 4. Total Units Sold */}
+          {/* Total Units Sold */}
           <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
@@ -491,15 +436,10 @@ const Dashboard = () => {
               </div>
             </div>
             <div className="flex items-baseline justify-between">
-              <span className="text-3xl font-extrabold text-slate-900">{m.itemsSold || 0}</span>
-              <Link
-                to="/serials?status=Sold"
-                className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center"
-              >
-                Sales History <ArrowUpRight size={14} />
-              </Link>
+              <span className="text-3xl font-extrabold text-slate-900">{m.itemsSold || 0} Pcs</span>
+              <span className="text-xs text-slate-400 font-medium">{m.totalCustomers || 0} customers</span>
             </div>
-            <p className="text-[11px] text-slate-400 mt-1">Full cash sold PCs & items</p>
+            <p className="text-[11px] text-slate-400 mt-1">All completed sales volume</p>
           </div>
         </div>
       </div>
@@ -512,14 +452,14 @@ const Dashboard = () => {
               Active Credit Accounts & Receivables
             </h3>
             <p className="text-xs text-slate-500">
-              Serial numbers currently on credit with outstanding balances
+              Sales made on credit with remaining balance to collect
             </p>
           </div>
           <Link
-            to="/serials?status=On+Credit"
+            to="/customers"
             className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
           >
-            <span>View All ({m.itemsOnCredit || 0})</span>
+            <span>View Customers ({m.totalCustomers || 0})</span>
             <ArrowUpRight size={14} />
           </Link>
         </div>
@@ -531,7 +471,7 @@ const Dashboard = () => {
             </div>
             <p className="text-sm font-semibold text-slate-800">All Credits Settled</p>
             <p className="text-xs text-slate-500 mt-0.5">
-              There are no active serial numbers with outstanding credit balance.
+              There is currently no outstanding credit balance.
             </p>
           </div>
         ) : (
@@ -539,10 +479,10 @@ const Dashboard = () => {
             <table className="w-full text-left text-xs">
               <thead className="bg-slate-50/75 text-slate-500 uppercase font-semibold border-b border-slate-200">
                 <tr>
-                  <th className="px-6 py-3">Serial / IMEI</th>
-                  <th className="px-6 py-3">Product</th>
+                  <th className="px-6 py-3">Item</th>
                   <th className="px-6 py-3">Customer</th>
-                  <th className="px-6 py-3">Agreed Credit</th>
+                  <th className="px-6 py-3 text-center">Qty</th>
+                  <th className="px-6 py-3">Total Credit</th>
                   <th className="px-6 py-3">Paid Amount</th>
                   <th className="px-6 py-3">Remaining Balance</th>
                   <th className="px-6 py-3">Status</th>
@@ -551,28 +491,25 @@ const Dashboard = () => {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {data?.recentCreditItems?.map((s) => (
-                  <tr key={s._id} className="hover:bg-slate-50/60 transition">
-                    <td className="px-6 py-3.5 font-mono font-bold text-slate-900">
-                      {s.serialNumber}
+                  <tr key={s._id || s.id} className="hover:bg-slate-50/60 transition">
+                    <td className="px-6 py-3.5 font-bold text-slate-900">
+                      {s.product?.name || 'Item'}
                     </td>
                     <td className="px-6 py-3.5">
-                      <p className="font-semibold text-slate-800">{s.product?.name || '—'}</p>
-                      <p className="text-[10px] text-slate-400">
-                        {s.product?.brand} {s.product?.model}
-                      </p>
-                    </td>
-                    <td className="px-6 py-3.5">
-                      <p className="font-medium text-slate-800">{s.customer?.name || 'Walk-in'}</p>
+                      <p className="font-semibold text-slate-800">{s.customer?.name || 'Customer'}</p>
                       <p className="text-[10px] text-slate-400">{s.customer?.phone || 'No phone'}</p>
                     </td>
+                    <td className="px-6 py-3.5 text-center font-bold text-slate-700">
+                      {s.quantity || 1}
+                    </td>
                     <td className="px-6 py-3.5 font-semibold text-slate-900">
-                      ${s.creditAmount?.toFixed(2)}
+                      ${Number(s.totalAmount || s.creditAmount || 0).toFixed(2)}
                     </td>
                     <td className="px-6 py-3.5 font-medium text-emerald-600">
-                      ${s.paidAmount?.toFixed(2)}
+                      ${Number(s.paidAmount || 0).toFixed(2)}
                     </td>
                     <td className="px-6 py-3.5 font-bold text-amber-600">
-                      ${s.remainingBalance?.toFixed(2)}
+                      ${Number(s.remainingBalance || 0).toFixed(2)}
                     </td>
                     <td className="px-6 py-3.5">
                       <CreditBadge status={s.creditStatus} />
@@ -580,7 +517,7 @@ const Dashboard = () => {
                     <td className="px-6 py-3.5 text-right">
                       <button
                         onClick={() => {
-                          setSelectedCreditSerial(s);
+                          setSelectedCreditSale(s);
                           setIsPaymentModalOpen(true);
                         }}
                         className="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-semibold text-[11px] shadow-2xs transition inline-flex items-center gap-1"
@@ -598,35 +535,22 @@ const Dashboard = () => {
       </div>
 
       {/* Modals */}
-      {selectedCreditSerial && (
+      {selectedCreditSale && (
         <RecordPaymentModal
           isOpen={isPaymentModalOpen}
           onClose={() => {
             setIsPaymentModalOpen(false);
-            setSelectedCreditSerial(null);
+            setSelectedCreditSale(null);
           }}
           onSubmit={handleRecordPayment}
-          serial={selectedCreditSerial}
+          serial={selectedCreditSale}
         />
       )}
-
-      <AddSerialsModal
-        isOpen={isAddSerialsOpen}
-        onClose={() => setIsAddSerialsOpen(false)}
-        onSubmit={handleAddSerials}
-        products={allProducts}
-      />
 
       <ProductModal
         isOpen={isAddProductOpen}
         onClose={() => setIsAddProductOpen(false)}
         onSubmit={handleAddProduct}
-      />
-
-      <CustomerModal
-        isOpen={isAddCustomerOpen}
-        onClose={() => setIsAddCustomerOpen(false)}
-        onSubmit={handleAddCustomer}
       />
     </div>
   );

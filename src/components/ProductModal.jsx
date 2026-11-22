@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { X, PackagePlus, Barcode } from 'lucide-react';
+import { X, PackagePlus, DollarSign } from 'lucide-react';
 
 const ProductModal = ({ isOpen, onClose, onSubmit, product = null }) => {
   const [formData, setFormData] = useState({
     name: '',
     brand: '',
     model: '',
-    category: 'General',
+    category: 'Computers & PCs',
     purchasePrice: '',
     sellingPrice: '',
-    hasSerial: true,
-    serialNumbers: '',
     stockQuantity: 1,
     description: ''
   });
@@ -18,7 +16,6 @@ const ProductModal = ({ isOpen, onClose, onSubmit, product = null }) => {
   const [error, setError] = useState('');
 
   const categories = [
-    'General',
     'Computers & PCs',
     'Laptops',
     'Smartphones',
@@ -27,7 +24,8 @@ const ProductModal = ({ isOpen, onClose, onSubmit, product = null }) => {
     'Accessories',
     'Appliances',
     'Tablets',
-    'Gaming'
+    'Gaming',
+    'General'
   ];
 
   useEffect(() => {
@@ -36,12 +34,10 @@ const ProductModal = ({ isOpen, onClose, onSubmit, product = null }) => {
         name: product.name || '',
         brand: product.brand || '',
         model: product.model || '',
-        category: product.category || 'General',
+        category: product.category || 'Computers & PCs',
         purchasePrice: product.purchasePrice || '',
         sellingPrice: product.sellingPrice || '',
-        hasSerial: product.hasSerial !== undefined ? product.hasSerial : true,
-        serialNumbers: '',
-        stockQuantity: product.stockQuantity || 0,
+        stockQuantity: product.stockQuantity !== undefined ? product.stockQuantity : 1,
         description: product.description || ''
       });
     } else {
@@ -52,8 +48,6 @@ const ProductModal = ({ isOpen, onClose, onSubmit, product = null }) => {
         category: 'Computers & PCs',
         purchasePrice: '',
         sellingPrice: '',
-        hasSerial: true,
-        serialNumbers: '',
         stockQuantity: 1,
         description: ''
       });
@@ -71,7 +65,7 @@ const ProductModal = ({ isOpen, onClose, onSubmit, product = null }) => {
       return setError('Item / Product name is required');
     }
     if (formData.purchasePrice === '' || Number(formData.purchasePrice) < 0) {
-      return setError('Valid purchase/cost price is required');
+      return setError('Valid cost price is required');
     }
     if (formData.sellingPrice === '' || Number(formData.sellingPrice) < 0) {
       return setError('Valid selling price is required');
@@ -83,7 +77,7 @@ const ProductModal = ({ isOpen, onClose, onSubmit, product = null }) => {
         ...formData,
         purchasePrice: Number(formData.purchasePrice),
         sellingPrice: Number(formData.sellingPrice),
-        stockQuantity: Number(formData.stockQuantity) || 1
+        stockQuantity: Math.max(0, parseInt(formData.stockQuantity, 10) || 0)
       });
       onClose();
     } catch (err) {
@@ -93,35 +87,39 @@ const ProductModal = ({ isOpen, onClose, onSubmit, product = null }) => {
     }
   };
 
+  const cost = Number(formData.purchasePrice) || 0;
+  const sell = Number(formData.sellingPrice) || 0;
+  const qty = parseInt(formData.stockQuantity, 10) || 0;
+  const unitProfit = sell - cost;
+  const totalInvestment = cost * qty;
+
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200">
+      <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
         {/* Header */}
         <div className="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
           <div className="flex items-center gap-2">
             <PackagePlus size={20} className="text-indigo-400" />
             <h3 className="font-semibold text-base">
-              {product ? 'Edit Item Details' : 'Register New Item & Serial Number'}
+              {product ? 'Edit Item Details' : 'Register New Item'}
             </h3>
           </div>
-          <button
-            onClick={onClose}
-            className="text-slate-400 hover:text-white transition p-1 rounded-md"
-          >
+          <button onClick={onClose} className="text-slate-400 hover:text-white transition p-1">
             <X size={20} />
           </button>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs">
           {error && (
-            <div className="p-3 text-xs bg-red-50 text-red-700 rounded-lg border border-red-200">
+            <div className="p-3 bg-red-50 text-red-700 rounded-xl border border-red-200">
               {error}
             </div>
           )}
 
+          {/* Item Name */}
           <div>
-            <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">
+            <label className="block font-semibold text-slate-700 uppercase mb-1">
               Item Name *
             </label>
             <input
@@ -130,140 +128,42 @@ const ProductModal = ({ isOpen, onClose, onSubmit, product = null }) => {
               placeholder="e.g. Dell OptiPlex 7080 PC, HP Core i7 Laptop"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
             />
           </div>
 
+          {/* Brand & Specs */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">
-                Brand
-              </label>
+              <label className="block font-semibold text-slate-700 uppercase mb-1">Brand</label>
               <input
                 type="text"
                 placeholder="e.g. Dell, HP, Apple"
                 value={formData.brand}
                 onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-                className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">
-                Model / Specs
-              </label>
+              <label className="block font-semibold text-slate-700 uppercase mb-1">Specs / Model</label>
               <input
                 type="text"
-                placeholder="e.g. i7-10700 16GB 512GB SSD"
+                placeholder="e.g. i7 16GB 512GB"
                 value={formData.model}
                 onChange={(e) => setFormData({ ...formData, model: e.target.value })}
-                className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
           </div>
 
-          {/* Serial Tracking Option Toggle */}
-          <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl">
+          {/* Category & Quantity */}
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <span className="text-xs font-semibold text-slate-800 block">
-                {formData.hasSerial ? 'Individual Serial Number Tracking' : 'Bulk / Non-Serialized Stock'}
-              </span>
-              <span className="text-[11px] text-slate-500">
-                {formData.hasSerial
-                  ? 'PCs, Laptops, and Phones tracked by unique Serial / IMEI'
-                  : 'Cables, Mice, RAM, Adapters tracked by quantity count only'}
-              </span>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer shrink-0 ml-3">
-              <input
-                type="checkbox"
-                checked={formData.hasSerial}
-                onChange={(e) => {
-                  const checked = e.target.checked;
-                  setFormData((prev) => ({
-                    ...prev,
-                    hasSerial: checked
-                  }));
-                }}
-                className="sr-only peer"
-              />
-              <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-            </label>
-          </div>
-
-          {/* If Serialized: Direct Serial Number Input */}
-          {!product && formData.hasSerial && (
-            <div className="p-3.5 bg-indigo-50/60 border border-indigo-200 rounded-xl space-y-1.5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5 text-indigo-900 font-semibold text-xs">
-                  <Barcode size={16} className="text-indigo-600" />
-                  <span>Serial Number(s) / Service Tag / IMEI</span>
-                </div>
-                {formData.serialNumbers && (
-                  <span className="text-[11px] font-semibold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded">
-                    {
-                      formData.serialNumbers
-                        .split(/[\n,]+/)
-                        .map((s) => s.trim())
-                        .filter(Boolean).length
-                    }{' '}
-                    Pcs detected
-                  </span>
-                )}
-              </div>
-              <textarea
-                rows={2}
-                placeholder="Enter serial number (e.g. DELL-PC-77821) or multiple separated by comma or new line"
-                value={formData.serialNumbers}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  const count = val.split(/[\n,]+/).map((s) => s.trim()).filter(Boolean).length;
-                  setFormData({
-                    ...formData,
-                    serialNumbers: val,
-                    stockQuantity: count > 0 ? count : formData.stockQuantity
-                  });
-                }}
-                className="w-full font-mono text-xs uppercase px-3 py-2 bg-white rounded-lg border border-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-              <p className="text-[11px] text-slate-500">
-                You can scan with a barcode scanner or paste multiple serials. Each serial represents 1 physical PC in your store.
-              </p>
-            </div>
-          )}
-
-          {/* If Non-Serialized: Quantity Field */}
-          {(!formData.hasSerial || product) && (
-            <div className="p-3 bg-amber-50/60 border border-amber-200 rounded-xl flex items-center justify-between">
-              <div>
-                <label className="block text-xs font-semibold text-amber-900 uppercase">
-                  Quantity / Pcs Bought *
-                </label>
-                <p className="text-[11px] text-amber-700">
-                  How many pieces of this item did you purchase for the shop?
-                </p>
-              </div>
-              <input
-                type="number"
-                min="1"
-                required
-                value={formData.stockQuantity}
-                onChange={(e) =>
-                  setFormData({ ...formData, stockQuantity: parseInt(e.target.value, 10) || 1 })
-                }
-                className="w-24 px-3 py-1.5 text-center font-bold text-sm bg-white rounded-lg border border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-500"
-              />
-            </div>
-          )}
-
-          <div className="grid grid-cols-3 gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">
-                Category
-              </label>
+              <label className="block font-semibold text-slate-700 uppercase mb-1">Category</label>
               <select
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+                className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
               >
                 {categories.map((c) => (
                   <option key={c} value={c}>
@@ -272,9 +172,29 @@ const ProductModal = ({ isOpen, onClose, onSubmit, product = null }) => {
                 ))}
               </select>
             </div>
+
+            {/* Quantity in Stock */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">
-                Cost ($) *
+              <label className="block font-semibold text-indigo-900 uppercase mb-1">
+                Quantity in Stock (Pcs) *
+              </label>
+              <input
+                type="number"
+                min="0"
+                required
+                placeholder="How many pcs?"
+                value={formData.stockQuantity}
+                onChange={(e) => setFormData({ ...formData, stockQuantity: e.target.value })}
+                className="w-full px-3 py-2 border-2 border-indigo-200 bg-indigo-50/40 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-extrabold text-sm text-center text-indigo-950"
+              />
+            </div>
+          </div>
+
+          {/* Cost Price & Selling Price */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block font-semibold text-slate-700 uppercase mb-1">
+                Cost Price ($) *
               </label>
               <input
                 type="number"
@@ -284,12 +204,12 @@ const ProductModal = ({ isOpen, onClose, onSubmit, product = null }) => {
                 placeholder="0.00"
                 value={formData.purchasePrice}
                 onChange={(e) => setFormData({ ...formData, purchasePrice: e.target.value })}
-                className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">
-                Sell Price ($) *
+              <label className="block font-semibold text-slate-700 uppercase mb-1">
+                Selling Price ($) *
               </label>
               <input
                 type="number"
@@ -299,62 +219,54 @@ const ProductModal = ({ isOpen, onClose, onSubmit, product = null }) => {
                 placeholder="0.00"
                 value={formData.sellingPrice}
                 onChange={(e) => setFormData({ ...formData, sellingPrice: e.target.value })}
-                className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold"
               />
             </div>
           </div>
 
-          {/* Live Investment & Margin Summary */}
-          {Number(formData.purchasePrice) > 0 && Number(formData.sellingPrice) > 0 && (
-            <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs space-y-1">
+          {/* Live Profit Preview */}
+          {cost > 0 && sell > 0 && (
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
               <div className="flex items-center justify-between text-slate-600">
-                <span>Unit Margin / Profit:</span>
-                <span className="font-semibold text-emerald-600">
-                  +${(Number(formData.sellingPrice) - Number(formData.purchasePrice)).toFixed(2)} (
-                  {(
-                    ((Number(formData.sellingPrice) - Number(formData.purchasePrice)) /
-                      Number(formData.purchasePrice)) *
-                    100
-                  ).toFixed(1)}
-                  %)
+                <span>Profit per piece:</span>
+                <span className={`font-bold ${unitProfit >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                  {unitProfit >= 0 ? '+' : ''}${unitProfit.toFixed(2)}
                 </span>
               </div>
-              <div className="flex items-center justify-between text-slate-700 font-medium pt-1 border-t border-slate-200/60">
-                <span>Total Batch Investment ({formData.stockQuantity || 1} pcs):</span>
-                <span className="font-bold text-slate-900">
-                  ${(Number(formData.purchasePrice) * (Number(formData.stockQuantity) || 1)).toFixed(2)}
-                </span>
+              <div className="flex items-center justify-between text-slate-700 pt-1 border-t border-slate-200/60 font-medium">
+                <span>Total Stock Investment ({qty} pcs):</span>
+                <span className="font-extrabold text-slate-900">${totalInvestment.toFixed(2)}</span>
               </div>
             </div>
           )}
 
+          {/* Notes */}
           <div>
-            <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">
-              Notes (Optional)
-            </label>
+            <label className="block font-semibold text-slate-700 uppercase mb-1">Notes (Optional)</label>
             <input
               type="text"
-              placeholder="e.g. Origin, warranty, or condition notes..."
+              placeholder="e.g. Origin, warranty, or supplier notes..."
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
 
-          <div className="pt-3 border-t border-slate-200 flex items-center justify-end gap-3">
+          {/* Actions */}
+          <div className="pt-2 border-t border-slate-200 flex items-center justify-end gap-2">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-lg transition"
+              className="px-4 py-2 font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-5 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm transition disabled:opacity-50"
+              className="px-5 py-2 font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-xs transition disabled:opacity-50"
             >
-              {loading ? 'Saving...' : product ? 'Update Item' : 'Register Item & Serial'}
+              {loading ? 'Saving...' : product ? 'Update Item' : 'Register Item'}
             </button>
           </div>
         </form>

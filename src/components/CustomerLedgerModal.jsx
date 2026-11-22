@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { X, User, Phone, MapPin, CreditCard, DollarSign, Calendar, ShieldAlert } from 'lucide-react';
+import { X, User, Phone, MapPin, CreditCard, DollarSign, Calendar, ShoppingBag } from 'lucide-react';
 import { customerAPI } from '../services/api';
-import { StatusBadge, CreditBadge } from './StatusBadge';
+import { CreditBadge } from './StatusBadge';
 
 const CustomerLedgerModal = ({ isOpen, onClose, customerId, onOpenPaymentModal }) => {
   const [data, setData] = useState(null);
@@ -31,6 +31,11 @@ const CustomerLedgerModal = ({ isOpen, onClose, customerId, onOpenPaymentModal }
 
   if (!isOpen) return null;
 
+  const purchases = [
+    ...(data?.sales || []),
+    ...(data?.serials || [])
+  ];
+
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
       <div className="relative bg-white rounded-2xl shadow-2xl max-w-3xl w-full overflow-hidden border border-slate-200 max-h-[90vh] flex flex-col">
@@ -44,7 +49,7 @@ const CustomerLedgerModal = ({ isOpen, onClose, customerId, onOpenPaymentModal }
               <h3 className="font-semibold text-base leading-tight">
                 {loading ? 'Loading...' : data?.name}
               </h3>
-              <p className="text-xs text-slate-400">Customer Credit Account & Ledger</p>
+              <p className="text-xs text-slate-400">Customer Credit Account & Purchase Ledger</p>
             </div>
           </div>
           <button
@@ -91,7 +96,7 @@ const CustomerLedgerModal = ({ isOpen, onClose, customerId, onOpenPaymentModal }
                     ${data.summary?.totalOutstanding?.toFixed(2)}
                   </span>
                   <span className="text-[11px] text-amber-600 mt-0.5 block">
-                    Across {data.summary?.activeCreditItems} active credit items
+                    Unsettled balance due
                   </span>
                 </div>
 
@@ -103,29 +108,29 @@ const CustomerLedgerModal = ({ isOpen, onClose, customerId, onOpenPaymentModal }
                     ${data.summary?.totalPaid?.toFixed(2)}
                   </span>
                   <span className="text-[11px] text-emerald-600 mt-0.5 block">
-                    {data.payments?.length || 0} payment records
+                    Total collected
                   </span>
                 </div>
 
-                <div className="p-4 rounded-xl bg-slate-100 border border-slate-200">
-                  <span className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider block">
-                    Total Credit Issued
+                <div className="p-4 rounded-xl bg-indigo-50 border border-indigo-200">
+                  <span className="text-[11px] font-semibold text-indigo-700 uppercase tracking-wider block">
+                    Total Purchases
                   </span>
-                  <span className="text-2xl font-bold text-slate-900 mt-1 block">
+                  <span className="text-2xl font-bold text-indigo-900 mt-1 block">
                     ${data.summary?.totalCredit?.toFixed(2)}
                   </span>
-                  <span className="text-[11px] text-slate-500 mt-0.5 block">
-                    {data.summary?.totalPurchases || 0} total units taken
+                  <span className="text-[11px] text-indigo-600 mt-0.5 block">
+                    Across {purchases.length} transaction(s)
                   </span>
                 </div>
               </div>
 
-              {/* Serials / Purchases Ledger */}
+              {/* Purchases & Credit Ledger */}
               <div>
                 <h4 className="font-bold text-sm text-slate-900 mb-3 flex items-center justify-between">
-                  <span>Purchases & Credit Items ({data.serials?.length || 0})</span>
+                  <span>Purchases & Credit Ledger ({purchases.length})</span>
                 </h4>
-                {data.serials?.length === 0 ? (
+                {purchases.length === 0 ? (
                   <p className="text-xs text-slate-400 py-3 text-center bg-slate-50 rounded-lg">
                     No items registered to this customer yet.
                   </p>
@@ -134,51 +139,66 @@ const CustomerLedgerModal = ({ isOpen, onClose, customerId, onOpenPaymentModal }
                     <table className="w-full text-left text-xs">
                       <thead className="bg-slate-50 text-slate-600 uppercase font-semibold border-b border-slate-200">
                         <tr>
-                          <th className="px-3 py-2.5">Serial Number</th>
-                          <th className="px-3 py-2.5">Product</th>
-                          <th className="px-3 py-2.5">Status</th>
-                          <th className="px-3 py-2.5">Credit</th>
+                          <th className="px-3 py-2.5">Item</th>
+                          <th className="px-3 py-2.5 text-center">Qty</th>
+                          <th className="px-3 py-2.5">Type</th>
+                          <th className="px-3 py-2.5">Total Amount</th>
                           <th className="px-3 py-2.5">Paid</th>
-                          <th className="px-3 py-2.5">Balance</th>
+                          <th className="px-3 py-2.5">Remaining Balance</th>
                           <th className="px-3 py-2.5 text-right">Action</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
-                        {data.serials.map((s) => (
-                          <tr key={s._id} className="hover:bg-slate-50/70">
-                            <td className="px-3 py-2.5 font-mono font-medium text-slate-900">
-                              {s.serialNumber}
-                            </td>
-                            <td className="px-3 py-2.5 text-slate-700">
-                              {s.product?.name}
-                            </td>
-                            <td className="px-3 py-2.5">
-                              <StatusBadge status={s.status} />
-                            </td>
-                            <td className="px-3 py-2.5 font-medium text-slate-800">
-                              ${s.creditAmount?.toFixed(2)}
-                            </td>
-                            <td className="px-3 py-2.5 text-emerald-700 font-medium">
-                              ${s.paidAmount?.toFixed(2)}
-                            </td>
-                            <td className="px-3 py-2.5 font-bold text-amber-700">
-                              ${s.remainingBalance?.toFixed(2)}
-                            </td>
-                            <td className="px-3 py-2.5 text-right">
-                              {s.status === 'On Credit' && s.remainingBalance > 0 && (
-                                <button
-                                  onClick={() => {
-                                    onClose();
-                                    onOpenPaymentModal(s);
-                                  }}
-                                  className="px-2.5 py-1 text-[11px] font-semibold text-white bg-amber-600 hover:bg-amber-700 rounded-md transition shadow-2xs"
+                        {purchases.map((s) => {
+                          const total = Number(s.totalAmount || s.creditAmount || 0);
+                          const paid = Number(s.paidAmount || 0);
+                          const balance = Number(s.remainingBalance || 0);
+                          const isCredit = s.saleType === 'Credit' || s.status === 'On Credit';
+
+                          return (
+                            <tr key={s._id || s.id} className="hover:bg-slate-50/70">
+                              <td className="px-3 py-2.5 font-medium text-slate-900">
+                                {s.product?.name || 'Item'}
+                              </td>
+                              <td className="px-3 py-2.5 text-center font-bold text-slate-700">
+                                {s.quantity || 1}
+                              </td>
+                              <td className="px-3 py-2.5">
+                                <span
+                                  className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                    isCredit
+                                      ? 'bg-amber-100 text-amber-800'
+                                      : 'bg-emerald-100 text-emerald-800'
+                                  }`}
                                 >
-                                  Pay
-                                </button>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
+                                  {isCredit ? 'Credit' : 'Cash'}
+                                </span>
+                              </td>
+                              <td className="px-3 py-2.5 font-medium text-slate-800">
+                                ${total.toFixed(2)}
+                              </td>
+                              <td className="px-3 py-2.5 text-emerald-700 font-medium">
+                                ${paid.toFixed(2)}
+                              </td>
+                              <td className="px-3 py-2.5 font-bold text-amber-700">
+                                ${balance.toFixed(2)}
+                              </td>
+                              <td className="px-3 py-2.5 text-right">
+                                {isCredit && balance > 0 && (
+                                  <button
+                                    onClick={() => {
+                                      onClose();
+                                      onOpenPaymentModal(s);
+                                    }}
+                                    className="px-2.5 py-1 text-[11px] font-semibold text-white bg-amber-600 hover:bg-amber-700 rounded-md transition shadow-2xs"
+                                  >
+                                    Pay
+                                  </button>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
@@ -200,7 +220,6 @@ const CustomerLedgerModal = ({ isOpen, onClose, customerId, onOpenPaymentModal }
                       <thead className="bg-slate-50 text-slate-600 uppercase font-semibold border-b border-slate-200">
                         <tr>
                           <th className="px-3 py-2.5">Date</th>
-                          <th className="px-3 py-2.5">Serial</th>
                           <th className="px-3 py-2.5">Method</th>
                           <th className="px-3 py-2.5">Amount</th>
                           <th className="px-3 py-2.5">Staff</th>
@@ -209,23 +228,16 @@ const CustomerLedgerModal = ({ isOpen, onClose, customerId, onOpenPaymentModal }
                       </thead>
                       <tbody className="divide-y divide-slate-100">
                         {data.payments.map((p) => (
-                          <tr key={p._id} className="hover:bg-slate-50/70">
+                          <tr key={p._id || p.id} className="hover:bg-slate-50/70">
                             <td className="px-3 py-2 text-slate-500">
                               {new Date(p.paymentDate).toLocaleDateString()}
                             </td>
-                            <td className="px-3 py-2 font-mono text-slate-700">
-                              {p.serialNumber?.serialNumber || 'N/A'}
-                            </td>
-                            <td className="px-3 py-2 text-slate-700">{p.paymentMethod}</td>
+                            <td className="px-3 py-2 text-slate-700 font-medium">{p.paymentMethod}</td>
                             <td className="px-3 py-2 font-bold text-emerald-700">
-                              +${p.amount?.toFixed(2)}
+                              ${Number(p.amount).toFixed(2)}
                             </td>
-                            <td className="px-3 py-2 text-slate-500">
-                              {p.recordedBy?.name || 'Staff'}
-                            </td>
-                            <td className="px-3 py-2 text-slate-500 truncate max-w-xs">
-                              {p.notes || '-'}
-                            </td>
+                            <td className="px-3 py-2 text-slate-600">{p.recordedBy?.name || 'Staff'}</td>
+                            <td className="px-3 py-2 text-slate-400 italic">{p.notes || '—'}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -242,4 +254,3 @@ const CustomerLedgerModal = ({ isOpen, onClose, customerId, onOpenPaymentModal }
 };
 
 export default CustomerLedgerModal;
-

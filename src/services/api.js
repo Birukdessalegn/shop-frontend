@@ -53,7 +53,15 @@ export const productAPI = {
   getById: (id) => api.get(`/products/${id}`),
   create: (data) => api.post('/products', data),
   update: (id, data) => api.put(`/products/${id}`, data),
+  addStock: (id, data) => api.post(`/products/${id}/stock`, data),
   delete: (id) => api.delete(`/products/${id}`)
+};
+
+// Sale endpoints
+export const saleAPI = {
+  create: (data) => api.post('/sales', data),
+  getAll: (params) => api.get('/sales', { params }),
+  recordPayment: (id, data) => api.post(`/sales/${id}/payments`, data)
 };
 
 // Serial Number endpoints

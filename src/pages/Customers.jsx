@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { customerAPI, serialAPI } from '../services/api';
+import { customerAPI, saleAPI, serialAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import {
   Users,
@@ -85,8 +85,12 @@ const Customers = () => {
     }
   };
 
-  const handleRecordPayment = async (serialId, payload) => {
-    await serialAPI.recordPayment(serialId, payload);
+  const handleRecordPayment = async (itemId, payload) => {
+    try {
+      await saleAPI.recordPayment(itemId, payload);
+    } catch {
+      await serialAPI.recordPayment(itemId, payload);
+    }
     setSuccessMsg('Payment recorded successfully!');
     fetchCustomers();
   };

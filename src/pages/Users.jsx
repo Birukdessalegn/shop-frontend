@@ -495,10 +495,10 @@ const Users = () => {
                 <label className="block text-xs font-semibold text-slate-700 uppercase mb-1.5">
                   Select Role & Responsibilities
                 </label>
-                <div className="grid grid-cols-1 gap-2">
+                <div className="grid grid-cols-3 gap-2">
                   {/* Sales */}
                   <label
-                    className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition ${
+                    className={`flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer transition ${
                       formData.role === 'sales'
                         ? 'border-blue-500 bg-blue-50/50'
                         : 'border-slate-200 hover:bg-slate-50'
@@ -510,22 +510,17 @@ const Users = () => {
                       value="sales"
                       checked={formData.role === 'sales'}
                       onChange={() => setFormData({ ...formData, role: 'sales' })}
-                      className="mt-1 text-blue-600 focus:ring-blue-500"
+                      className="text-blue-600 focus:ring-blue-500"
                     />
-                    <div className="text-xs">
-                      <div className="font-semibold text-slate-900 flex items-center gap-1.5">
-                        <ShoppingBag size={14} className="text-blue-600" />
-                        Sales Staff
-                      </div>
-                      <p className="text-slate-500 mt-0.5">
-                        Can sell items (Cash/Credit), collect installment payments, and verify serials. Cannot register new stock.
-                      </p>
+                    <div className="text-xs font-semibold text-slate-900 flex items-center gap-1.5 truncate">
+                      <ShoppingBag size={14} className="text-blue-600 shrink-0" />
+                      <span className="truncate">Sales</span>
                     </div>
                   </label>
 
                   {/* Stock */}
                   <label
-                    className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition ${
+                    className={`flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer transition ${
                       formData.role === 'stock'
                         ? 'border-amber-500 bg-amber-50/50'
                         : 'border-slate-200 hover:bg-slate-50'
@@ -537,22 +532,17 @@ const Users = () => {
                       value="stock"
                       checked={formData.role === 'stock'}
                       onChange={() => setFormData({ ...formData, role: 'stock' })}
-                      className="mt-1 text-amber-600 focus:ring-amber-500"
+                      className="text-amber-600 focus:ring-amber-500"
                     />
-                    <div className="text-xs">
-                      <div className="font-semibold text-slate-900 flex items-center gap-1.5">
-                        <Boxes size={14} className="text-amber-600" />
-                        Stock / Inventory Staff
-                      </div>
-                      <p className="text-slate-500 mt-0.5">
-                        Can create new products, accept incoming inventory, and register serial numbers. Cannot execute sales.
-                      </p>
+                    <div className="text-xs font-semibold text-slate-900 flex items-center gap-1.5 truncate">
+                      <Boxes size={14} className="text-amber-600 shrink-0" />
+                      <span className="truncate">Stock</span>
                     </div>
                   </label>
 
                   {/* Admin */}
                   <label
-                    className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition ${
+                    className={`flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer transition ${
                       formData.role === 'admin'
                         ? 'border-purple-500 bg-purple-50/50'
                         : 'border-slate-200 hover:bg-slate-50'
@@ -564,16 +554,11 @@ const Users = () => {
                       value="admin"
                       checked={formData.role === 'admin'}
                       onChange={() => setFormData({ ...formData, role: 'admin' })}
-                      className="mt-1 text-purple-600 focus:ring-purple-500"
+                      className="text-purple-600 focus:ring-purple-500"
                     />
-                    <div className="text-xs">
-                      <div className="font-semibold text-slate-900 flex items-center gap-1.5">
-                        <ShieldCheck size={14} className="text-purple-600" />
-                        Administrator
-                      </div>
-                      <p className="text-slate-500 mt-0.5">
-                        Full access to all modules, sales, stock, financial balances, reports, and user management.
-                      </p>
+                    <div className="text-xs font-semibold text-slate-900 flex items-center gap-1.5 truncate">
+                      <ShieldCheck size={14} className="text-purple-600 shrink-0" />
+                      <span className="truncate">Admin</span>
                     </div>
                   </label>
                 </div>

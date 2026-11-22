@@ -8,7 +8,7 @@ import Layout from './components/Layout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Products from './pages/Products';
-import Serials from './pages/Serials';
+import Sales from './pages/Sales';
 import Customers from './pages/Customers';
 import Users from './pages/Users';
 
@@ -25,7 +25,7 @@ function App() {
             <Route element={<Layout />}>
               <Route path="/" element={<Dashboard />} />
               <Route path="/products" element={<Products />} />
-              <Route path="/serials" element={<Serials />} />
+              <Route path="/sales" element={<Sales />} />
               <Route path="/customers" element={<Customers />} />
               <Route path="/users" element={<Users />} />
             </Route>
