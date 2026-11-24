@@ -219,18 +219,14 @@ const Products = () => {
                 <tr>
                   <th className="px-6 py-3.5">Item & Model</th>
                   <th className="px-6 py-3.5">Category</th>
-                  <th className="px-6 py-3.5">Cost / Sell Price</th>
-                  <th className="px-6 py-3.5">Profit Margin</th>
+                  <th className="px-6 py-3.5">Selling Price</th>
                   <th className="px-6 py-3.5 text-center">In Stock</th>
                   <th className="px-6 py-3.5 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {products.map((p) => {
-                  const cost = p.purchasePrice || 0;
                   const sell = p.sellingPrice || 0;
-                  const margin = sell - cost;
-                  const marginPct = cost > 0 ? ((margin / cost) * 100).toFixed(1) : 0;
                   const qty = p.stockQuantity || 0;
 
                   return (
@@ -258,23 +254,11 @@ const Products = () => {
                         </span>
                       </td>
 
-                      {/* Cost / Retail */}
+                      {/* Selling Price */}
                       <td className="px-6 py-4">
-                        <div className="space-y-0.5">
-                          <p className="font-bold text-slate-900 text-sm">
-                            ${sell.toFixed(2)}
-                          </p>
-                          <p className="text-[11px] text-slate-400">
-                            Cost: ${cost.toFixed(2)}
-                          </p>
-                        </div>
-                      </td>
-
-                      {/* Margin */}
-                      <td className="px-6 py-4">
-                        <span className="inline-flex items-center gap-1 font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                          +${margin.toFixed(2)} ({marginPct}%)
-                        </span>
+                        <p className="font-bold text-slate-900 text-sm">
+                          ${sell.toFixed(2)}
+                        </p>
                       </td>
 
                       {/* Stock Quantity */}

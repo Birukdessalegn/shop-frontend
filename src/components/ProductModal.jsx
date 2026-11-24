@@ -64,9 +64,6 @@ const ProductModal = ({ isOpen, onClose, onSubmit, product = null }) => {
     if (!formData.name.trim()) {
       return setError('Item / Product name is required');
     }
-    if (formData.purchasePrice === '' || Number(formData.purchasePrice) < 0) {
-      return setError('Valid cost price is required');
-    }
     if (formData.sellingPrice === '' || Number(formData.sellingPrice) < 0) {
       return setError('Valid selling price is required');
     }
@@ -75,7 +72,7 @@ const ProductModal = ({ isOpen, onClose, onSubmit, product = null }) => {
       setLoading(true);
       await onSubmit({
         ...formData,
-        purchasePrice: Number(formData.purchasePrice),
+        purchasePrice: formData.purchasePrice !== '' && !isNaN(Number(formData.purchasePrice)) ? Number(formData.purchasePrice) : 0,
         sellingPrice: Number(formData.sellingPrice),
         stockQuantity: Math.max(0, parseInt(formData.stockQuantity, 10) || 0)
       });
@@ -190,55 +187,22 @@ const ProductModal = ({ isOpen, onClose, onSubmit, product = null }) => {
             </div>
           </div>
 
-          {/* Cost Price & Selling Price */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block font-semibold text-slate-700 uppercase mb-1">
-                Cost Price ($) *
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                required
-                placeholder="0.00"
-                value={formData.purchasePrice}
-                onChange={(e) => setFormData({ ...formData, purchasePrice: e.target.value })}
-                className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold"
-              />
-            </div>
-            <div>
-              <label className="block font-semibold text-slate-700 uppercase mb-1">
-                Selling Price ($) *
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                required
-                placeholder="0.00"
-                value={formData.sellingPrice}
-                onChange={(e) => setFormData({ ...formData, sellingPrice: e.target.value })}
-                className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold"
-              />
-            </div>
+          {/* Selling Price */}
+          <div>
+            <label className="block font-semibold text-slate-700 uppercase mb-1">
+              Selling Price ($) *
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              required
+              placeholder="0.00"
+              value={formData.sellingPrice}
+              onChange={(e) => setFormData({ ...formData, sellingPrice: e.target.value })}
+              className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold"
+            />
           </div>
-
-          {/* Live Profit Preview */}
-          {cost > 0 && sell > 0 && (
-            <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
-              <div className="flex items-center justify-between text-slate-600">
-                <span>Profit per piece:</span>
-                <span className={`font-bold ${unitProfit >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                  {unitProfit >= 0 ? '+' : ''}${unitProfit.toFixed(2)}
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-slate-700 pt-1 border-t border-slate-200/60 font-medium">
-                <span>Total Stock Investment ({qty} pcs):</span>
-                <span className="font-extrabold text-slate-900">${totalInvestment.toFixed(2)}</span>
-              </div>
-            </div>
-          )}
 
           {/* Notes */}
           <div>

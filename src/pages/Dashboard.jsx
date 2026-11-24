@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { dashboardAPI, saleAPI, productAPI, customerAPI } from '../services/api';
 import {
   Package,
+  ShoppingBag,
   CreditCard,
   AlertTriangle,
   ArrowUpRight,
@@ -15,8 +16,6 @@ import {
   HandCoins,
   TrendingUp,
   PackageCheck,
-  BarChart3,
-  PieChart,
   Boxes
 } from 'lucide-react';
 import { CreditBadge } from '../components/StatusBadge';
@@ -78,23 +77,11 @@ const Dashboard = () => {
   }
 
   const m = data?.metrics || {};
-  const dailyTrend = data?.dailyTrend || [];
 
   // Financial aggregates
   const totalGrossSales = Number(m.totalGrossSales || 0);
-  const totalCostOfSold = Number(m.totalCostOfSold || 0);
-  const netProfit = Number(m.netProfit || 0);
-  const profitMargin = Number(m.profitMargin || 0);
   const totalCashInHand = Number(m.totalCollected || 0);
   const totalCreditDebt = Number(m.totalCreditOutstanding || 0);
-  const totalReceivablesPool = totalCashInHand + totalCreditDebt;
-  const cashCollectionPct =
-    totalReceivablesPool > 0
-      ? Math.min(100, Math.round((totalCashInHand / totalReceivablesPool) * 100))
-      : 0;
-
-  // Chart max scale helper
-  const maxDaySales = Math.max(...dailyTrend.map((d) => Math.max(d.sales || 0, d.collected || 0)), 100);
 
   return (
     <div className="space-y-6">
@@ -103,11 +90,19 @@ const Dashboard = () => {
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Shop Financial Dashboard</h1>
           <p className="text-xs text-slate-500 mt-0.5">
-            Real-time sales revenue, net profit margin, debt receivables, and stock counts
+            Real-time sales revenue, cash collected, debt receivables, and stock counts
           </p>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
+          <Link
+            to="/sales"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs transition"
+          >
+            <ShoppingBag size={15} />
+            <span>Go to Sell / POS</span>
+          </Link>
+
           <button
             onClick={handleRefresh}
             disabled={refreshing}
@@ -119,7 +114,7 @@ const Dashboard = () => {
 
           <button
             onClick={() => setIsAddProductOpen(true)}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs transition"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-900 text-white shadow-xs transition"
           >
             <Plus size={15} />
             <span>Register New Item</span>
@@ -133,18 +128,18 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* 1. FINANCIAL PERFORMANCE CARDS (Gross Sales, Cash in Hand, Cost, Net Profit) */}
+      {/* 1. FINANCIAL & STORE OVERVIEW CARDS */}
       <div>
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-            Financial & Profit Telemetry
+            Shop Performance Overview
           </h2>
           <span className="text-[11px] text-slate-400">
-            Real-time Sales & Net Margin
+            Real-time Sales & Inventory
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {/* Card 1: Total Gross Sales */}
           <div className="bg-gradient-to-br from-indigo-900 to-slate-900 text-white p-5 rounded-2xl shadow-md border border-indigo-950 relative overflow-hidden">
             <div className="absolute right-0 top-0 w-28 h-28 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none"></div>
@@ -183,268 +178,55 @@ const Dashboard = () => {
             </p>
           </div>
 
-          {/* Card 3: Total Cost of Sold Items */}
+          {/* Card 3: Total Pieces in Store */}
           <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs hover:shadow-md transition">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Cost of Sold Goods (COGS)
-              </span>
-              <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
-                <PackageCheck size={18} />
-              </div>
-            </div>
-            <div className="text-3xl font-extrabold text-slate-800">
-              ${totalCostOfSold.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </div>
-            <p className="text-[11px] text-slate-400 mt-2">
-              Original wholesale purchase cost of sold items
-            </p>
-          </div>
-
-          {/* Card 4: Net Amount (Pure Net Profit) */}
-          <div className="bg-gradient-to-br from-emerald-950 via-slate-900 to-slate-950 text-white p-5 rounded-2xl shadow-md border border-emerald-900/60 relative overflow-hidden">
-            <div className="absolute right-0 top-0 w-28 h-28 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-emerald-300 uppercase tracking-wider">
-                Net Profit (Net Amount)
-              </span>
-              <div className="w-9 h-9 rounded-xl bg-emerald-900/80 text-emerald-300 flex items-center justify-center">
-                <TrendingUp size={18} />
-              </div>
-            </div>
-            <div className="text-3xl font-extrabold tracking-tight text-emerald-400">
-              {netProfit >= 0 ? '+' : ''}
-              ${netProfit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </div>
-            <div className="mt-2 flex items-center justify-between text-[11px]">
-              <span className="text-slate-300">Total Sales − Cost</span>
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                {profitMargin}% Margin
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 2. GRAPHICAL CHARTS (Sales Trend & Cash vs Debt Split) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Chart 1: Last 7 Days Sales Trend (Bar Chart) */}
-        <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <div className="flex items-center gap-2">
-                <div className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg">
-                  <BarChart3 size={18} />
-                </div>
-                <h3 className="font-bold text-slate-900 text-sm">Last 7 Days Sales & Cash Inflow</h3>
-              </div>
-              <div className="flex items-center gap-4 text-xs font-medium">
-                <span className="flex items-center gap-1.5 text-indigo-600">
-                  <span className="w-2.5 h-2.5 rounded-xs bg-indigo-600"></span>
-                  Sales Volume
-                </span>
-                <span className="flex items-center gap-1.5 text-emerald-600">
-                  <span className="w-2.5 h-2.5 rounded-xs bg-emerald-500"></span>
-                  Cash Collected
-                </span>
-              </div>
-            </div>
-            <p className="text-xs text-slate-400 mb-6">
-              Daily comparison between items sold and cash received in your shop
-            </p>
-          </div>
-
-          <div className="pt-2">
-            <div className="grid grid-cols-7 gap-2 sm:gap-4 items-end h-44 border-b border-slate-100 pb-2">
-              {dailyTrend.map((d, idx) => {
-                const salesHeight = Math.max(8, Math.round((d.sales / maxDaySales) * 100));
-                const collectedHeight = Math.max(8, Math.round((d.collected / maxDaySales) * 100));
-
-                return (
-                  <div key={idx} className="flex flex-col items-center justify-end h-full group">
-                    <div className="opacity-0 group-hover:opacity-100 transition absolute -translate-y-28 bg-slate-900 text-white text-[10px] py-1 px-2 rounded-md shadow-lg pointer-events-none z-10 whitespace-nowrap">
-                      <p className="font-bold">{d.date}</p>
-                      <p className="text-indigo-300">Sales: ${d.sales.toFixed(2)}</p>
-                      <p className="text-emerald-300">Collected: ${d.collected.toFixed(2)}</p>
-                    </div>
-
-                    <div className="w-full flex items-end justify-center gap-1 sm:gap-1.5 h-36">
-                      <div
-                        style={{ height: `${salesHeight}%` }}
-                        className="w-1/2 max-w-[18px] bg-indigo-500 hover:bg-indigo-600 rounded-t-sm transition-all"
-                        title={`Sales: $${d.sales.toFixed(2)}`}
-                      ></div>
-                      <div
-                        style={{ height: `${collectedHeight}%` }}
-                        className="w-1/2 max-w-[18px] bg-emerald-400 hover:bg-emerald-500 rounded-t-sm transition-all"
-                        title={`Collected: $${d.collected.toFixed(2)}`}
-                      ></div>
-                    </div>
-
-                    <span className="text-[11px] font-medium text-slate-500 mt-2">{d.day}</span>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="flex items-center justify-between text-[11px] text-slate-400 pt-2">
-              <span>Past 7 days performance</span>
-              <span>Updated in real-time</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Chart 2: Cash In Hand vs Credit Debt Split */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <div className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg">
-                <PieChart size={18} />
-              </div>
-              <h3 className="font-bold text-slate-900 text-sm">Cash vs Uncollected Debt</h3>
-            </div>
-            <p className="text-xs text-slate-400">
-              Distribution of sales revenue in hand vs customer debt
-            </p>
-          </div>
-
-          <div className="my-6 flex flex-col items-center justify-center">
-            <div className="relative w-36 h-36 flex items-center justify-center">
-              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                <path
-                  className="text-amber-100"
-                  strokeWidth="3.5"
-                  stroke="currentColor"
-                  fill="none"
-                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                />
-                <path
-                  className="text-emerald-500 transition-all duration-1000 ease-out"
-                  strokeDasharray={`${cashCollectionPct}, 100`}
-                  strokeWidth="3.5"
-                  strokeLinecap="round"
-                  stroke="currentColor"
-                  fill="none"
-                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                />
-              </svg>
-
-              <div className="absolute flex flex-col items-center justify-center text-center">
-                <span className="text-2xl font-black text-slate-900">{cashCollectionPct}%</span>
-                <span className="text-[10px] font-semibold uppercase text-slate-400">Collected</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-2 pt-2 border-t border-slate-100 text-xs">
-            <div className="flex items-center justify-between">
-              <span className="flex items-center gap-1.5 text-slate-600">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                Cash in Hand:
-              </span>
-              <span className="font-bold text-emerald-700">${totalCashInHand.toFixed(2)}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="flex items-center gap-1.5 text-slate-600">
-                <span className="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
-                Outstanding Debt:
-              </span>
-              <span className="font-bold text-amber-700">${totalCreditDebt.toFixed(2)}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 3. STOCK & STORE OVERVIEW STRIP */}
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-            Inventory & Store Stock
-          </h2>
-          <span className="text-[11px] text-slate-400">
-            Total Inventory Valuation: <strong className="text-slate-700">${Number(m.currentInventoryCost || 0).toFixed(2)}</strong>
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Total Catalog Items */}
-          <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Catalog Items
-              </span>
-              <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-                <Package size={18} />
-              </div>
-            </div>
-            <div className="flex items-baseline justify-between">
-              <span className="text-3xl font-extrabold text-slate-900">{m.totalProducts || 0}</span>
-              <Link to="/products" className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center">
-                Manage <ArrowUpRight size={14} />
-              </Link>
-            </div>
-            <p className="text-[11px] text-slate-400 mt-1">Product lines registered</p>
-          </div>
-
-          {/* Total Pieces in Stock */}
-          <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
                 Total Pieces in Store
               </span>
-              <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
                 <Boxes size={18} />
               </div>
             </div>
             <div className="flex items-baseline justify-between">
-              <span className="text-3xl font-extrabold text-emerald-700">{m.totalStockPieces || 0} Pcs</span>
-              <Link to="/products" className="text-xs font-semibold text-emerald-600 hover:text-emerald-800 flex items-center">
+              <span className="text-3xl font-extrabold text-indigo-700">
+                {m.totalStockPieces || 0} Pcs
+              </span>
+              <Link to="/products" className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center">
                 View Stock <ArrowUpRight size={14} />
               </Link>
             </div>
-            <p className="text-[11px] text-slate-400 mt-1">Physical units ready for sale</p>
-          </div>
-
-          {/* Outstanding Debt Receivables */}
-          <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Outstanding Credit
-              </span>
-              <div className="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
-                <AlertTriangle size={18} />
-              </div>
-            </div>
-            <div className="flex items-baseline justify-between">
-              <span className="text-3xl font-extrabold text-rose-700">
-                ${m.totalCreditOutstanding?.toFixed(2) || '0.00'}
-              </span>
-              <Link to="/customers" className="text-xs font-semibold text-rose-600 hover:text-rose-800 flex items-center">
-                Customers <ArrowUpRight size={14} />
-              </Link>
-            </div>
-            <p className="text-[11px] text-slate-400 mt-1">Uncollected customer debt</p>
-          </div>
-
-          {/* Total Units Sold */}
-          <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Total Units Sold
-              </span>
-              <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                <CheckCircle2 size={18} />
-              </div>
-            </div>
-            <div className="flex items-baseline justify-between">
-              <span className="text-3xl font-extrabold text-slate-900">{m.itemsSold || 0} Pcs</span>
-              <span className="text-xs text-slate-400 font-medium">{m.totalCustomers || 0} customers</span>
-            </div>
-            <p className="text-[11px] text-slate-400 mt-1">All completed sales volume</p>
+            <p className="text-[11px] text-slate-400 mt-1">Physical units available in shop inventory</p>
           </div>
         </div>
       </div>
 
-      {/* 4. ACTIVE CREDIT RECEIVABLES TABLE */}
+      {/* 2. QUICK SELL / POS BANNER */}
+      {/* QUICK SELL / POS BANNER */}
+      <div className="bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 text-white p-6 rounded-2xl shadow-sm border border-indigo-950 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center text-white shrink-0">
+            <ShoppingBag size={24} />
+          </div>
+          <div>
+            <h3 className="font-bold text-base tracking-tight">Point of Sale (POS) Counter</h3>
+            <p className="text-xs text-indigo-200 mt-0.5">
+              Select in-stock items, process cash or credit checkout, and record sales in real time.
+            </p>
+          </div>
+        </div>
+
+        <Link
+          to="/sales"
+          className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-xs font-bold bg-white text-indigo-950 hover:bg-indigo-50 shadow-md transition shrink-0"
+        >
+          <ShoppingBag size={15} className="text-indigo-600" />
+          <span>Open Sales / POS Page</span>
+          <ArrowUpRight size={15} />
+        </Link>
+      </div>
+
+      {/* ACTIVE CREDIT RECEIVABLES TABLE */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
           <div>

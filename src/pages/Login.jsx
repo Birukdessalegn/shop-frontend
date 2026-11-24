@@ -22,8 +22,12 @@ const Login = () => {
     setLoading(true);
 
     try {
-      await login(email, password);
-      navigate('/');
+      const res = await login(email, password);
+      if (res?.data?.role === 'stock') {
+        navigate('/products');
+      } else {
+        navigate('/sales');
+      }
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Invalid credentials');
     } finally {
