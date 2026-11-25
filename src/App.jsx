@@ -15,10 +15,10 @@ import Users from './pages/Users';
 // Default landing page redirect based on role
 const HomeRedirect = () => {
   const { user } = useAuth();
-  if (user?.role === 'stock') {
-    return <Navigate to="/products" replace />;
+  if (user?.role === 'sales') {
+    return <Navigate to="/sales" replace />;
   }
-  return <Navigate to="/sales" replace />;
+  return <Navigate to="/products" replace />;
 };
 
 function App() {

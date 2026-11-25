@@ -47,11 +47,11 @@ const Layout = () => {
   };
 
   const navItems = [
-    ...(isAdmin || isSales || user?.role === 'staff'
-      ? [{ to: '/sales', label: 'Sell / POS', icon: ShoppingBag }]
-      : []),
     ...(isAdmin || isStock || user?.role === 'staff'
       ? [{ to: '/products', label: 'Items & Stock', icon: Package }]
+      : []),
+    ...(isAdmin || isSales || user?.role === 'staff'
+      ? [{ to: '/sales', label: 'Sell / POS', icon: ShoppingBag }]
       : []),
     ...(isAdmin || isSales || user?.role === 'staff'
       ? [{ to: '/customers', label: 'Customers & Credit', icon: Users }]

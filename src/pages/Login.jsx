@@ -23,10 +23,10 @@ const Login = () => {
 
     try {
       const res = await login(email, password);
-      if (res?.data?.role === 'stock') {
-        navigate('/products');
-      } else {
+      if (res?.data?.role === 'sales') {
         navigate('/sales');
+      } else {
+        navigate('/products');
       }
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Invalid credentials');
