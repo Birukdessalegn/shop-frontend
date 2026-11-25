@@ -50,7 +50,6 @@ const Layout = () => {
     ...(isAdmin || isSales || user?.role === 'staff'
       ? [{ to: '/sales', label: 'Sell / POS', icon: ShoppingBag }]
       : []),
-    { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     ...(isAdmin || isStock || user?.role === 'staff'
       ? [{ to: '/products', label: 'Items & Stock', icon: Package }]
       : []),

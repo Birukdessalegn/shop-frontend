@@ -6,7 +6,7 @@ import Layout from './components/Layout';
 
 // Pages
 import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
+// import Dashboard from './pages/Dashboard';
 import Products from './pages/Products';
 import Sales from './pages/Sales';
 import Customers from './pages/Customers';
@@ -34,7 +34,7 @@ function App() {
             <Route element={<Layout />}>
               <Route path="/" element={<HomeRedirect />} />
               <Route path="/sales" element={<Sales />} />
-              <Route path="/dashboard" element={<Dashboard />} />
+              {/* <Route path="/dashboard" element={<Dashboard />} /> */}
               <Route path="/products" element={<Products />} />
               <Route path="/customers" element={<Customers />} />
               <Route path="/users" element={<Users />} />
