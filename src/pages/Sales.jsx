@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { productAPI, saleAPI, customerAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -22,6 +23,8 @@ import CustomerModal from '../components/CustomerModal';
 
 const Sales = () => {
   const { user, isAdmin, canSell } = useAuth();
+  const [searchParams] = useSearchParams();
+  const initialProductId = searchParams.get('productId') || '';
 
   const [products, setProducts] = useState([]);
   const [customers, setCustomers] = useState([]);
@@ -32,7 +35,7 @@ const Sales = () => {
   const [successMsg, setSuccessMsg] = useState('');
 
   // POS Form State
-  const [selectedProductId, setSelectedProductId] = useState('');
+  const [selectedProductId, setSelectedProductId] = useState(initialProductId);
   const [quantity, setQuantity] = useState(1);
   const [unitPrice, setUnitPrice] = useState('');
   const [saleType, setSaleType] = useState('Cash');
@@ -119,7 +122,7 @@ const Sales = () => {
     } else {
       setUnitPrice('');
     }
-  }, [selectedProductId]);
+  }, [selectedProductId, products]);
 
   const maxStock = selectedProduct ? selectedProduct.stockQuantity || 0 : 0;
   const qty = parseInt(quantity, 10) || 1;

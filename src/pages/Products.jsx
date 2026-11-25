@@ -11,10 +11,12 @@ import {
   AlertCircle,
   PlusCircle,
   Boxes,
-  ShieldAlert
+  ShieldAlert,
+  ShoppingBag
 } from 'lucide-react';
 import ProductModal from '../components/ProductModal';
 import AddStockModal from '../components/AddStockModal';
+import QuickSellModal from '../components/QuickSellModal';
 
 const Products = () => {
   const [products, setProducts] = useState([]);
@@ -29,8 +31,10 @@ const Products = () => {
   const [editingProduct, setEditingProduct] = useState(null);
   const [selectedProductForStock, setSelectedProductForStock] = useState(null);
   const [isAddStockOpen, setIsAddStockOpen] = useState(false);
+  const [selectedProductToSell, setSelectedProductToSell] = useState(null);
+  const [isQuickSellOpen, setIsQuickSellOpen] = useState(false);
 
-  const { isAdmin, isStock, canManageStock } = useAuth();
+  const { isAdmin, isStock, canManageStock, canSell } = useAuth();
 
   const categories = [
     'All',
@@ -181,7 +185,7 @@ const Products = () => {
           />
         </div>
 
-        <div className="flex items-center gap-1.5 overflow-x-auto py-1 scrollbar-none">
+        <div className="flex flex-wrap items-center gap-1.5 py-1">
           {categories.map((cat) => (
             <button
               key={cat}
@@ -213,8 +217,116 @@ const Products = () => {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+          <>
+            {/* Mobile Card List (No horizontal scroll) */}
+            <div className="md:hidden divide-y divide-slate-100">
+              {products.map((p) => {
+                const sell = p.sellingPrice || 0;
+                const qty = p.stockQuantity || 0;
+
+                return (
+                  <div key={p._id || p.id} className="p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-2.5 min-w-0">
+                        <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold shrink-0 mt-0.5">
+                          <Package size={18} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-bold text-slate-900 text-sm break-words">{p.name}</p>
+                          {(p.brand || p.model) && (
+                            <p className="text-[11px] text-slate-500 truncate">
+                              {p.brand && <span className="font-medium text-slate-700">{p.brand}</span>}
+                              {p.model && <span>{p.brand ? ' • ' : ''}Model: {p.model}</span>}
+                            </p>
+                          )}
+                          <span className="inline-flex items-center mt-1 px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                            {p.category}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="text-right shrink-0 space-y-1">
+                        <p className="font-extrabold text-slate-900 text-sm">
+                          ${sell.toFixed(2)}
+                        </p>
+                        <div>
+                          {qty > 0 ? (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                              {qty} Pcs
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-red-100 text-red-800 border border-red-200">
+                              Out of Stock
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {(canSell || canManageStock || isAdmin) && (
+                      <div className="flex flex-wrap items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                        {canSell && (
+                          <button
+                            onClick={() => {
+                              setSelectedProductToSell(p);
+                              setIsQuickSellOpen(true);
+                            }}
+                            disabled={qty < 1}
+                            className="px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed text-white transition flex items-center gap-1"
+                            title={qty < 1 ? 'Out of stock' : 'Sell this item'}
+                          >
+                            <ShoppingBag size={14} />
+                            <span>Sell</span>
+                          </button>
+                        )}
+
+                        {canManageStock && (
+                          <button
+                            onClick={() => {
+                              setSelectedProductForStock(p);
+                              setIsAddStockOpen(true);
+                            }}
+                            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition flex items-center gap-1"
+                            title="Add more pieces to stock"
+                          >
+                            <PlusCircle size={14} />
+                            <span>+ Stock</span>
+                          </button>
+                        )}
+
+                        {canManageStock && (
+                          <button
+                            onClick={() => {
+                              setEditingProduct(p);
+                              setIsProductModalOpen(true);
+                            }}
+                            className="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 border border-slate-200 transition flex items-center gap-1"
+                            title="Edit item info"
+                          >
+                            <Edit2 size={14} />
+                            <span>Edit</span>
+                          </button>
+                        )}
+
+                        {isAdmin && (
+                          <button
+                            onClick={() => handleDeleteProduct(p._id || p.id, p.name)}
+                            className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 border border-red-200 transition"
+                            title="Delete item"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Desktop Table */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left text-xs">
               <thead className="bg-slate-50 text-slate-500 uppercase font-semibold border-b border-slate-200">
                 <tr>
                   <th className="px-6 py-3.5">Item & Model</th>
@@ -277,6 +389,22 @@ const Products = () => {
                       {/* Actions */}
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
+                          {/* Sell Button */}
+                          {canSell && (
+                            <button
+                              onClick={() => {
+                                setSelectedProductToSell(p);
+                                setIsQuickSellOpen(true);
+                              }}
+                              disabled={qty < 1}
+                              className="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed text-white transition flex items-center gap-1"
+                              title={qty < 1 ? 'Out of stock' : 'Sell this item'}
+                            >
+                              <ShoppingBag size={14} />
+                              <span>Sell</span>
+                            </button>
+                          )}
+
                           {/* Add Stock Button */}
                           {canManageStock && (
                             <button
@@ -324,6 +452,7 @@ const Products = () => {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </div>
 
@@ -346,6 +475,19 @@ const Products = () => {
         }}
         onSubmit={handleAddStock}
         product={selectedProductForStock}
+      />
+
+      <QuickSellModal
+        isOpen={isQuickSellOpen}
+        onClose={() => {
+          setIsQuickSellOpen(false);
+          setSelectedProductToSell(null);
+        }}
+        product={selectedProductToSell}
+        onSuccess={(msg) => {
+          setSuccessMsg(msg);
+          fetchProducts();
+        }}
       />
     </div>
   );
